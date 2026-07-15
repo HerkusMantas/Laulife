@@ -290,6 +290,86 @@
     font-size: 12.5px; color: var(--muted);
   }
   .lvl-help .lh .pill { flex-shrink: 0; }
+  .lvl-help .lh .cons { flex-shrink: 0; }
+
+  /* ── Vengtini + konsensuso taškai + nauji laukai ── */
+  .pill.lvl-avoid { background: var(--surface-2); color: var(--muted); text-decoration: line-through; }
+  .pill.unverified { background: var(--warn-soft); color: var(--warn); }
+  .cons {
+    font-family: var(--mono); font-size: 13px; letter-spacing: 1px; color: var(--muted);
+    white-space: nowrap;
+  }
+  .cons.c4 { color: var(--good); }
+  .cons.c3 { color: var(--info); }
+  .cons.c2 { color: var(--warn); }
+  .cons.c1 { color: var(--crit); }
+
+  /* Faktas vs. interpretacija */
+  .fi { display: grid; gap: 6px; margin-top: 8px; }
+  .fi .fact, .fi .interp { font-size: 13px; display: flex; gap: 8px; align-items: baseline; }
+  .fi .fact { color: var(--ink); }
+  .fi .interp { color: var(--muted); }
+  .fi .tag-lbl { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; flex-shrink: 0; padding: 1px 6px; border-radius: 4px; }
+  .fi .fact .tag-lbl { background: var(--good-soft); color: var(--good); }
+  .fi .interp .tag-lbl { background: var(--surface-2); color: var(--muted); }
+
+  /* Šališkumo įspėjimas */
+  .warn-banner {
+    display: flex; gap: 8px; align-items: baseline;
+    background: var(--warn-soft); color: var(--warn);
+    border: 1px solid var(--warn); border-radius: 8px;
+    padding: 8px 11px; font-size: 12.5px; margin-top: 10px;
+  }
+  .warn-banner b { font-weight: 700; }
+
+  /* Pilnumo tikrinimas */
+  .checklist { display: grid; gap: 4px; margin: 10px 0; }
+  .checklist .ci { display: flex; gap: 8px; align-items: baseline; font-size: 12.5px; color: var(--muted); }
+  .checklist .ci.ok { color: var(--good); }
+  .checklist .ci .mk { font-family: var(--mono); flex-shrink: 0; }
+  .completeness-tag { font-family: var(--mono); font-size: 11px; padding: 1px 8px; border-radius: 99px; background: var(--surface-2); color: var(--muted); }
+  .completeness-tag.ready { background: var(--good-soft); color: var(--good); }
+
+  /* ✦ DI pasiūlymo panelė */
+  .ai-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .ai-btn {
+    border: 1px solid var(--chart); background: transparent; color: var(--chart);
+    border-radius: 99px; padding: 6px 14px; font-weight: 700; font-size: 13px;
+  }
+  .ai-btn:hover { background: var(--good-soft); }
+  .ai-note { font-size: 11.5px; color: var(--muted); }
+  .ai-panel {
+    margin-top: 12px; border: 1px solid var(--chart); border-radius: 10px;
+    background: var(--good-soft); padding: 14px;
+  }
+  .ai-panel h4 { margin: 0 0 8px; font-size: 13px; display: flex; align-items: center; gap: 6px; color: var(--good); }
+  .ai-panel .sug { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .ai-panel ul { margin: 6px 0 10px; padding-left: 18px; font-size: 12.5px; color: var(--muted); }
+  .ai-panel ul li { margin: 2px 0; }
+  .ai-panel .ai-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* Fiksavimo data + istorija */
+  .stamp { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .hist { margin-top: 10px; font-size: 12.5px; }
+  .hist summary { cursor: pointer; color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: .05em; }
+  .hist ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+  .hist li { color: var(--muted); display: flex; gap: 8px; }
+  .hist li .when { font-family: var(--mono); flex-shrink: 0; }
+
+  /* Taisyklių modalas */
+  .modal-back {
+    position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.45);
+    display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto;
+  }
+  .modal {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 22px; max-width: 640px; width: 100%;
+  }
+  .modal h2 { margin: 0 0 4px; font-size: 19px; }
+  .modal h3 { font-size: 13px; margin: 16px 0 6px; font-family: var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+  .modal ul { margin: 0; padding-left: 20px; font-size: 13.5px; }
+  .modal ul li { margin: 4px 0; }
+  .modal .close-row { display: flex; justify-content: flex-end; margin-top: 18px; }
 
   /* ── Sintezė ── */
   .hyp {
@@ -380,10 +460,11 @@
 
 <div class="shell">
   <header class="top">
-    <span class="wordmark"><b>Laulife</b> · Tyrimo modulis · v0.2 prototipas</span>
+    <span class="wordmark"><b>Laulife</b> · Tyrimo modulis · v0.3 prototipas</span>
     <span class="spacer"></span>
     <span class="tools">
       <button class="btn small" id="back-btn" hidden>← Klausimai</button>
+      <button class="btn small" id="rules-btn" title="Informacijos rinkimo taisyklės (iš learning modelio)">Taisyklės</button>
       <button class="btn small" id="reset-btn" title="Ištrina jūsų pakeitimus ir grąžina demo duomenis">Atstatyti demo</button>
     </span>
   </header>
@@ -435,15 +516,26 @@
           <div class="stat"><span class="k">Atmesta</span><span class="v" id="s-discarded">0</span></div>
           <div class="stat"><span class="k">Aukšto lygio (A–B) dalis</span><span class="v" id="s-quality">–</span></div>
         </section>
-        <section class="panel" data-note="sonas:lygiai" data-note-label="Šoninis langas: įrodymų lygiai">
-          <h2>Kaip skaityti lygius</h2>
+        <section class="panel" data-note="sonas:lygiai" data-note-label="Šoninis langas: šaltinių hierarchija">
+          <h2>Šaltinių hierarchija</h2>
           <div class="lvl-help">
-            <div class="lh"><span class="pill lvl-A">A</span> Sisteminės apžvalgos, metaanalizės, RCT</div>
-            <div class="lh"><span class="pill lvl-B">B</span> Stebimieji tyrimai, kokybiški šaltiniai</div>
-            <div class="lh"><span class="pill lvl-C">C</span> Ekspertų nuomonės, žiniasklaida</div>
-            <div class="lh"><span class="pill lvl-D">D</span> Anekdotai, tinklaraščiai, nuogirdos</div>
+            <div class="lh"><span class="pill lvl-A">A</span> Recenzuojami žurnalai</div>
+            <div class="lh"><span class="pill lvl-B">B</span> Monografijos / vadovėliai</div>
+            <div class="lh"><span class="pill lvl-C">C</span> Pripažintos enciklopedijos (SEP, IEP…)</div>
+            <div class="lh"><span class="pill lvl-D">D</span> Pirminiai tekstai su komentarais</div>
+            <div class="lh"><span class="pill lvl-avoid">Ø</span> Vengtini: tinklaraščiai, populiarioji, neaiški kilmė</div>
           </div>
-          <p class="hint" style="margin:0">Pasitikėjimas hipoteze skaičiuojamas iš įrodymų lygių ir krypties: A sveria 4×, D — 1×.</p>
+          <p class="hint" style="margin:0 0 4px">Svoris pasitikėjime: A 4× · B 3× · C 2× · D 1× · vengtini 0×.</p>
+        </section>
+        <section class="panel" data-note="sonas:konsensusas" data-note-label="Šoninis langas: konsensuso lygiai">
+          <h2>Konsensuso lygis</h2>
+          <div class="lvl-help">
+            <div class="lh"><span class="cons c4">●●●●</span> visuotinis</div>
+            <div class="lh"><span class="cons c3">●●●○</span> vyraujantis</div>
+            <div class="lh"><span class="cons c2">●●○○</span> ginčijamas</div>
+            <div class="lh"><span class="cons c1">●○○○</span> marginalus</div>
+          </div>
+          <p class="hint" style="margin:0">Konsensusas — ką sako <b>mokslo bendruomenė</b> (žymi ranka). Pasitikėjimo % — ką sako <b>tavo bazė</b>. Kai jie smarkiai skiriasi, appsas įspėja apie galimą šališkumą.</p>
         </section>
       </aside>
     </div>
@@ -461,18 +553,56 @@
 
 <script>
 (function () {
-  const LS_KEY = 'laulife-tyrimo-modulis-v02';
+  const LS_KEY = 'laulife-tyrimo-modulis-v03';
+  const LS_KEY_V02 = 'laulife-tyrimo-modulis-v02';
   const LS_KEY_V01 = 'laulife-tyrimo-modulis-v01';
-  const LEVEL_WEIGHT = { A: 4, B: 3, C: 2, D: 1 };
+  // Šaltinių hierarchija pagal learning modelį (žurnalai → … → pirminiai tekstai; vengtini = 0).
+  const LEVEL_WEIGHT = { A: 4, B: 3, C: 2, D: 1, avoid: 0 };
   const LEVEL_LABEL = {
-    A: 'A · metaanalizė / RCT',
-    B: 'B · stebimasis tyrimas',
-    C: 'C · ekspertai / žiniasklaida',
-    D: 'D · anekdotas / tinklaraštis'
+    A: 'A · recenzuojami žurnalai',
+    B: 'B · monografijos / vadovėliai',
+    C: 'C · pripažintos enciklopedijos',
+    D: 'D · pirminiai tekstai su komentarais',
+    avoid: 'Vengtini · tinklaraščiai / populiarioji / neaiški kilmė'
   };
+  const LEVEL_ORDER = ['A', 'B', 'C', 'D', 'avoid'];
   const STANCE_LABEL = { uz: 'palaiko', pries: 'prieštarauja', neutralu: 'neutralu' };
   const HYP_STATUSES = ['formuluojama', 'tikrinama', 'patvirtinta', 'paneigta', 'peržiūrima'];
   const CYCLE_STEPS = ['Klausimas', 'Rinkimas', 'Vertinimas', 'Sisteminimas', 'Analizė', 'Išvada'];
+  // Konsensuso lygis (learning modelio ●●●●–●○○○) — rankinis mokslo bendruomenės vertinimas.
+  const CONSENSUS = {
+    4: { dots: '●●●●', label: 'visuotinis' },
+    3: { dots: '●●●○', label: 'vyraujantis' },
+    2: { dots: '●●○○', label: 'ginčijamas' },
+    1: { dots: '●○○○', label: 'marginalus' }
+  };
+  // Ribotumo tipas: akademiškai pripažintas (sveria) ar marginali kritika (nesveria).
+  const LIMIT_KIND = { akad: 'akademinis ribotumas', marg: 'marginali kritika' };
+  // Privalomi hipotezės elementai (learning modelio taisyklė) — pilnumo tikrinimui.
+  const REQUIRED_FIELDS = [
+    { key: 'consensus', label: 'konsensuso lygis' },
+    { key: 'example', label: 'gyvenimiškas pavyzdys' },
+    { key: 'controversy', label: 'kontroversijos (su data)' },
+    { key: 'hasSupport', label: 'bent vienas šaltinis' }
+  ];
+
+  // Naujas šaltinio objektas su visais laukais (learning modelio elementai).
+  function newItem(o) {
+    return Object.assign({
+      id: uid(), title: '', url: '', note: '',
+      fact: '', interp: '', unverified: false,
+      stage: 'inbox', level: 'C', tags: [],
+      stances: {}, kinds: {} // kinds[hid]: 'akad' | 'marg' (tik kai stance === 'pries')
+    }, o);
+  }
+  // Nauja hipotezė su privalomais / rekomenduojamais learning laukais.
+  function newHyp(o) {
+    return Object.assign({
+      id: uid(), text: '', status: 'formuluojama', conclusion: '',
+      consensus: 0, example: '', controversy: '', controversyDate: '',
+      concludedAt: 0, history: []
+    }, o);
+  }
 
   function seed() {
     return { questions: [
@@ -480,68 +610,85 @@
         id: 'q1', createdAt: 1752400000000, tags: ['sveikata', 'įpročiai'],
         question: 'Ar reguliarus šalto vandens poveikis (šaltas dušas, maudynės) pagerina kasdienę savijautą ir energiją?',
         hypotheses: [
-          { id: 'h1', text: 'Reguliarūs šalti dušai (≥30 s, ≥4 sav.) sumažina savo jaučiamą nuovargį ir sergamumą.', status: 'tikrinama', conclusion: '' },
-          { id: 'h2', text: 'Poveikis savijautai daugiausia paaiškinamas placebo ir ritualo efektu, o ne fiziologija.', status: 'formuluojama', conclusion: '' }
+          newHyp({ id: 'h1', text: 'Reguliarūs šalti dušai (≥30 s, ≥4 sav.) sumažina savo jaučiamą nuovargį ir sergamumą.', status: 'tikrinama',
+            consensus: 2, example: 'Kolega mėnesį baigdavo dušą 45 s šaltu vandeniu ir teigia rečiau šąlantis — bet tai vienas atvejis, ne įrodymas.',
+            controversy: 'RCT rodo mažiau nedarbingumo dienų, bet subjektyvios savijautos pokytis silpnas ir tarp tyrėjų ginčijamas.', controversyDate: '2016' }),
+          newHyp({ id: 'h2', text: 'Poveikis savijautai daugiausia paaiškinamas placebo ir ritualo efektu, o ne fiziologija.', status: 'formuluojama',
+            consensus: 2 })
         ],
         items: [
-          {
+          newItem({
             id: 'i1', title: 'Buijze et al. (2016). „The Effect of Cold Showering on Health and Work" — RCT, n=3018',
             url: 'https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0161749',
-            note: 'Šalto dušo grupėse 29 % mažiau savo deklaruotų nedarbingumo dienų; savijautos balai skyrėsi nedaug.',
+            fact: 'Šalto dušo grupėje ~29 % mažiau savideklaruotų nedarbingumo dienų (RCT, n=3018).',
+            interp: 'Palaiko H1 dėl sergamumo, bet subjektyvios energijos pokytis silpnas — todėl H2 (placebo) neatmeta.',
             stage: 'kept', level: 'A', tags: ['fiziologija', 'darbingumas'],
-            stances: { h1: 'uz', h2: 'pries' }
-          },
-          {
-            id: 'i2', title: 'Systematinė apžvalga apie šalčio ekspoziciją ir imunitetą (žr. nuorodą)',
-            url: 'https://pubmed.ncbi.nlm.nih.gov/',
-            note: 'Įrodymai dėl imuniteto silpni ir nevienalyčiai; trūksta ilgalaikių RCT.',
-            stage: 'kept', level: 'B', tags: ['imunitetas'],
-            stances: { h1: 'neutralu', h2: 'uz' }
-          },
-          {
+            stances: { h1: 'uz', h2: 'pries' }, kinds: { h2: 'akad' }
+          }),
+          newItem({
+            id: 'i2', title: 'Medicininės fiziologijos vadovėlio skyrius apie termoreguliaciją ir šalčio termogenezę',
+            url: 'https://example.com/vadovelis',
+            fact: 'Aprašo norepinefrino ir rusvojo riebalinio audinio vaidmenį šalčio sukeltoje termogenezėje.',
+            interp: 'Paaiškina galimą fiziologinį mechanizmą — silpnai palaiko H1.',
+            stage: 'kept', level: 'B', tags: ['fiziologija'],
+            stances: { h1: 'uz' }, kinds: {}
+          }),
+          newItem({
+            id: 'i7', title: 'Enciklopedijos įrašas „Šalčio ekspozicija ir termogenezė" (apžvalginis)',
+            url: 'https://example.com/enciklopedija',
+            fact: 'Apibendrina: reguliari šalčio ekspozicija skatina adaptacinę termogenezę; ilgalaikis poveikis savijautai lieka neaiškus.',
+            interp: 'Silpnai palaiko H1, bet pripažįsta neapibrėžtumą.',
+            stage: 'kept', level: 'C', tags: ['fiziologija'],
+            stances: { h1: 'uz' }, kinds: {}
+          }),
+          newItem({
             id: 'i3', title: 'Podkastas: neurologo epizodas apie šalčio poveikį dopaminui',
-            url: 'https://example.com/podcast',
-            note: 'Teigiama, kad šaltis ilgam pakelia dopaminą. Remiasi nedideliu 2000 m. tyrimu (n=10).',
-            stage: 'inbox', level: 'C', tags: ['neurochemija'],
-            stances: {}
-          },
-          {
+            url: '',
+            note: 'Teigiama, kad šaltis ilgam pakelia dopaminą. Remiasi nedideliu 2000 m. tyrimu (n=10). Nuorodos neturiu.',
+            unverified: true,
+            stage: 'inbox', level: 'avoid', tags: ['neurochemija'],
+            stances: {}, kinds: {}
+          }),
+          newItem({
             id: 'i4', title: 'Tinklaraščio įrašas „30 dienų šalto dušo iššūkis pakeitė mano gyvenimą"',
             url: 'https://example.com/blog',
             note: 'Asmeninė patirtis be kontrolės. Naudinga nebent kaip hipotezių šaltinis.',
-            stage: 'discarded', level: 'D', tags: ['anekdotai'],
-            stances: {}
-          },
-          {
+            stage: 'discarded', level: 'avoid', tags: ['anekdotai'],
+            stances: {}, kinds: {}
+          }),
+          newItem({
             id: 'i5', title: 'Wim Hof metodo tyrimas (Kox et al., 2014, PNAS) — kvėpavimas + šaltis, n=24',
             url: 'https://www.pnas.org/doi/10.1073/pnas.1322174111',
             note: 'Rodo imuninio atsako moduliaciją, bet maišo kvėpavimo techniką su šalčiu — sunku atskirti veiksnius.',
-            stage: 'inbox', level: 'B', tags: ['imunitetas', 'metodologija'],
-            stances: {}
-          },
-          {
+            stage: 'inbox', level: 'A', tags: ['imunitetas', 'metodologija'],
+            stances: {}, kinds: {}
+          }),
+          newItem({
             id: 'i6', title: 'Naujienų portalo straipsnis „Mokslininkai: šaltas dušas — perdėtas mitas?"',
             url: 'https://example.com/news',
             note: 'Antraštė skambesnė nei turinys; cituoja tą patį Buijze tyrimą.',
-            stage: 'inbox', level: 'C', tags: ['žiniasklaida'],
-            stances: {}
-          }
+            stage: 'inbox', level: 'avoid', tags: ['žiniasklaida'],
+            stances: {}, kinds: {}
+          })
         ]
       },
       {
         id: 'q2', createdAt: 1752500000000, tags: ['sveikata', 'miegas'],
         question: 'Ar melatonino papildai pagerina miego kokybę sveikiems suaugusiems?',
         hypotheses: [
-          { id: 'h1', text: 'Melatoninas (0,5–5 mg prieš miegą) sutrumpina užmigimo laiką bent 10 min.', status: 'formuluojama', conclusion: '' }
+          newHyp({ id: 'h1', text: 'Melatoninas (0,5–5 mg prieš miegą) sutrumpina užmigimo laiką bent 10 min.', status: 'tikrinama',
+            consensus: 3, example: 'Draugas prieš egzaminus gerdavo 1 mg melatonino ir užmigdavo greičiau — pavienis atvejis, ne įrodymas.',
+            controversy: 'Metaanalizė rodo statistiškai reikšmingą, bet mažą (~7 min) efektą; klinikinė reikšmė ginčijama.', controversyDate: '2013' })
         ],
         items: [
-          {
+          newItem({
             id: 'i1', title: 'Metaanalizė: melatoninas ir pirminiai miego sutrikimai (Ferracioli-Oda et al., 2013)',
             url: 'https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0063773',
-            note: 'Užmigimo laikas vidutiniškai trumpėja ~7 min. Efektas statistiškai reikšmingas, bet nedidelis.',
-            stage: 'inbox', level: 'A', tags: ['miegas'],
-            stances: {}
-          }
+            fact: 'Užmigimo laikas trumpėja vidutiniškai ~7 min (metaanalizė).',
+            interp: 'Silpnai palaiko H1 — efektas realus, bet mažesnis nei hipotezėje minimos 10 min.',
+            stage: 'kept', level: 'A', tags: ['miegas'],
+            stances: { h1: 'uz' }, kinds: {}
+          })
         ]
       }
     ] };
@@ -551,13 +698,69 @@
   let activeQuestionId = null;
   let activeStage = 'rinkimas';
   let activeTagFilter = null;
-  let evalDraft = null; // { itemId, level, stances }
+  let evalDraft = null; // { itemId, level, fact, interp, unverified, stances, kinds }
+  let aiSuggestion = null; // ✦ pasiūlymo objektas vertinimo etape
+
+  /* ───────── ✦ DI pasiūlymo simuliacija (prototipe — taisyklės; appse — Gemini) ─────────
+     „DI siūlo, žmogus sprendžia". Heuristika iš domeno ir raktažodžių pagal learning
+     modelio šaltinių hierarchiją. Appse čia bus /api/ai kvietimas + realaus URL patikra. */
+  function aiSuggest(it, q) {
+    const url = (it.url || '').toLowerCase();
+    const text = ((it.title || '') + ' ' + (it.note || '') + ' ' + (it.fact || '')).toLowerCase();
+    const reasons = [];
+    let level = 'C';
+
+    const has = (s, arr) => arr.some(k => s.includes(k));
+    const journal = ['journals.plos', 'pubmed', 'ncbi.nlm', 'pnas.org', 'nature.com', 'sciencedirect', 'springer', 'wiley', 'nejm', 'thelancet', 'cell.com', 'doi.org', 'jamanetwork', 'bmj.com'];
+    const encyc = ['plato.stanford.edu', 'iep.utm.edu', 'britannica', 'encyclopedia'];
+    const popular = ['medium.com', 'substack', 'youtube', 'wordpress', 'blogspot', 'reddit', 'facebook', 'tiktok', 'instagram'];
+
+    if (has(url, journal)) { level = 'A'; reasons.push('domenas — recenzuojamas žurnalas / DOI'); }
+    else if (has(url, encyc)) { level = 'C'; reasons.push('domenas — pripažinta enciklopedija'); }
+    else if (has(url, popular) || has(text, ['tinklarašt', 'blog', 'podkast', 'podcast', 'naujien', 'portalas', 'influencer'])) { level = 'avoid'; reasons.push('populiarioji / neaiškios kilmės medžiaga'); }
+    else if (has(text, ['vadovėl', 'monografij', 'textbook', 'handbook'])) { level = 'B'; reasons.push('formatas — vadovėlis / monografija'); }
+
+    if (has(text, ['metaanaliz', 'meta-analiz', 'sisteminė apžvalga', 'systematic review', 'rct', 'randomiz'])) {
+      if (level !== 'avoid') { level = 'A'; reasons.push('metodas — metaanalizė / RCT (aukščiausias lygis)'); }
+    }
+    if (has(text, ['asmeninė patirtis', 'anekdot', 'mano istorija', 'n=1', 'iššūkis'])) { level = 'avoid'; reasons.push('asmeninė patirtis be kontrolės'); }
+
+    const unverified = !it.url || !it.url.trim();
+    if (unverified) reasons.push('nėra nuorodos — appse šaltinis būtų pažymėtas „nepatikrinta"');
+
+    // Kryptis — grubus spėjimas iš tono; pažymima, kad reikia patikslinti.
+    let dir = 'neutralu';
+    if (has(text, ['mitas', 'perdėt', 'neveiki', 'nepakank', 'paneig', 'nerodo', 'jokio poveikio'])) dir = 'pries';
+    else if (has(text, ['pagerina', 'sumažina', 'padeda', 'efektyv', 'palaiko', 'rodo poveikį', 'reikšming'])) dir = 'uz';
+    const stances = {}, kinds = {};
+    q.hypotheses.forEach(h => {
+      stances[h.id] = dir;
+      if (dir === 'pries') kinds[h.id] = (level === 'avoid' || level === 'D') ? 'marg' : 'akad';
+    });
+
+    // Žymos — pasiūlom esamas žymas, kurios sutinkamos tekste.
+    const allTags = [...new Set(state.questions.flatMap(x => x.items.flatMap(i => i.tags || [])))];
+    const tags = allTags.filter(t => text.includes(t.toLowerCase())).slice(0, 3);
+
+    return {
+      level, unverified, stances, kinds, tags,
+      fact: it.fact || it.note || '',
+      interp: it.interp || '',
+      dir,
+      reasons
+    };
+  }
 
   function load() {
     let s = null;
     try {
       const raw = localStorage.getItem(LS_KEY);
       if (raw) s = JSON.parse(raw);
+      if (!s) {
+        // migracija iš v0.2 (klausimų sąrašas be naujų laukų)
+        const v2 = localStorage.getItem(LS_KEY_V02);
+        if (v2) s = JSON.parse(v2);
+      }
       if (!s) {
         // migracija iš v0.1 (vienas klausimas be sąrašo)
         const old = localStorage.getItem(LS_KEY_V01);
@@ -568,7 +771,17 @@
       }
     } catch (e) { /* sugadinti duomenys — pradedam iš naujo */ }
     if (!s) s = seed();
-    s.questions.forEach(q => { if (!Array.isArray(q.tags)) q.tags = []; });
+    // Normalizuojam: seni įrašai gauna naujus learning laukus su numatytomis reikšmėmis.
+    s.questions.forEach(q => {
+      if (!Array.isArray(q.tags)) q.tags = [];
+      q.hypotheses = (q.hypotheses || []).map(h => newHyp(h));
+      q.items = (q.items || []).map(it => {
+        const n = newItem(it);
+        // seni „C · žiniasklaida" ir „D · anekdotas" tipai → vengtini
+        if (it.note && !n.fact && !it.fact) n.note = it.note;
+        return n;
+      });
+    });
     return s;
   }
   function save() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
@@ -584,17 +797,47 @@
   }
 
   // Pasitikėjimas: logistinė funkcija iš svertinės įrodymų sumos.
+  // Vengtini šaltiniai (weight 0) ir marginali kritika (kind 'marg') nesveria.
   function confidence(q, hypId) {
     let score = 0, n = 0;
     for (const it of q.items) {
       if (it.stage !== 'kept') continue;
       const st = it.stances[hypId];
       if (!st || st === 'neutralu') continue;
-      score += (st === 'uz' ? 1 : -1) * LEVEL_WEIGHT[it.level];
+      if (st === 'pries' && it.kinds && it.kinds[hypId] === 'marg') continue; // marginali kritika nesveria
+      const w = LEVEL_WEIGHT[it.level] || 0;
+      if (w === 0) continue;
+      score += (st === 'uz' ? 1 : -1) * w;
       n++;
     }
     if (n === 0) return null;
     return Math.round(100 / (1 + Math.exp(-score / 4)));
+  }
+
+  // Konsensuso lygį (1–4) verčia į apytikslį procentą — palyginimui su bazės pasitikėjimu.
+  function consensusPct(c) { return { 1: 15, 2: 40, 3: 65, 4: 90 }[c] || null; }
+
+  // Ar bazės pasitikėjimas smarkiai skiriasi nuo pažymėto konsensuso (galima šališkumo žymė).
+  function divergence(q, h) {
+    const conf = confidence(q, h.id);
+    const cons = consensusPct(h.consensus);
+    if (conf === null || cons === null) return null;
+    const diff = conf - cons;
+    if (Math.abs(diff) < 30) return null;
+    return { conf, cons, diff, higher: diff > 0 };
+  }
+
+  // Privalomų elementų pilnumas (learning taisyklė).
+  function completeness(q, h) {
+    const hasSupport = q.items.some(i => i.stage === 'kept' && (i.stances[h.id] === 'uz' || i.stances[h.id] === 'pries'));
+    const state = {
+      consensus: h.consensus > 0,
+      example: !!(h.example && h.example.trim()),
+      controversy: !!(h.controversy && h.controversy.trim() && h.controversyDate && h.controversyDate.trim()),
+      hasSupport
+    };
+    const done = REQUIRED_FIELDS.filter(f => state[f.key]).length;
+    return { state, done, total: REQUIRED_FIELDS.length, ready: done === REQUIRED_FIELDS.length };
   }
 
   function counts(q) {
@@ -630,7 +873,7 @@
     if (m && state.questions.some(q => q.id === m[1])) activeQuestionId = m[1];
     else activeQuestionId = null;
   }
-  window.addEventListener('hashchange', () => { applyHash(); evalDraft = null; render(); });
+  window.addEventListener('hashchange', () => { applyHash(); evalDraft = null; aiSuggestion = null; render(); });
 
   /* ───────── Atvaizdavimas ───────── */
 
@@ -790,8 +1033,17 @@
 
   function itemMeta(it) {
     const lvl = `<span class="pill lvl-${it.level}">${esc(LEVEL_LABEL[it.level])}</span>`;
+    const unv = it.unverified ? '<span class="pill unverified">nepatikrinta</span>' : '';
     const tags = (it.tags || []).map(t => `<span class="pill tag">#${esc(t)}</span>`).join('');
-    return lvl + tags;
+    return lvl + unv + tags;
+  }
+  // Faktas / interpretacija — atskiras rodymas (learning taisyklė).
+  function factInterp(it) {
+    if (!it.fact && !it.interp) return '';
+    return `<div class="fi">
+      ${it.fact ? `<div class="fact"><span class="tag-lbl">faktas</span><span>${esc(it.fact)}</span></div>` : ''}
+      ${it.interp ? `<div class="interp"><span class="tag-lbl">interpretacija</span><span>${esc(it.interp)}</span></div>` : ''}
+    </div>`;
   }
 
   function viewRinkimas(q) {
@@ -810,7 +1062,7 @@
       </form>
       ${inbox.length ? inbox.map(it => `
         <article class="item" data-id="${it.id}" data-note="saltinis:${q.id}:${it.id}" data-note-label="Šaltinio kortelė: ${esc(it.title.slice(0, 40))}…">
-          <div class="row"><h3>${esc(it.title)}</h3></div>
+          <div class="row"><h3>${esc(it.title)}</h3>${it.unverified || !it.url ? '<span class="pill unverified">nepatikrinta</span>' : ''}</div>
           ${it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener" style="font-size:13px">${esc(it.url)}</a>` : ''}
           ${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}
           <div class="actions">
@@ -827,28 +1079,72 @@
       return `<section class="panel"><h2>Vertinimas</h2><div class="empty">Nėra šaltinių, laukiančių vertinimo. Grįžk į „Rinkimą" ir įtrauk naujų.</div></section>`;
 
     const it = evalDraft ? q.items.find(i => i.id === evalDraft.itemId) : inbox[0];
-    if (!evalDraft) evalDraft = { itemId: it.id, level: it.level || 'C', stances: { ...it.stances } };
+    if (!evalDraft) evalDraft = {
+      itemId: it.id, level: it.level || 'C',
+      fact: it.fact || '', interp: it.interp || '', unverified: !!it.unverified,
+      stances: { ...it.stances }, kinds: { ...(it.kinds || {}) }
+    };
 
     const seg = (name, opts, cur, dataAttr) => `<span class="seg small" data-seg="${name}">${
       opts.map(o => `<button type="button" data-${dataAttr}="${o.v}" class="${cur === o.v ? 'on' : ''}">${o.l}</button>`).join('')
     }</span>`;
 
+    const levelOpts = [{ v: 'A', l: 'A' }, { v: 'B', l: 'B' }, { v: 'C', l: 'C' }, { v: 'D', l: 'D' }, { v: 'avoid', l: 'Vengti' }];
+
+    // ✦ DI pasiūlymo panelė
+    let aiHtml = `
+      <div class="ai-row">
+        <button type="button" class="ai-btn" data-act="ai-suggest">✦ DI pasiūlymas</button>
+        <span class="ai-note">Prototipe — taisyklės (domenas + raktažodžiai). Appse čia bus Gemini + realaus URL patikra.</span>
+      </div>`;
+    if (aiSuggestion && aiSuggestion.itemId === it.id) {
+      const s = aiSuggestion;
+      aiHtml += `
+      <div class="ai-panel">
+        <h4>✦ Siūlau (patikrink ir tvirtink)</h4>
+        <div class="sug">
+          <span class="pill lvl-${s.level}">${esc(LEVEL_LABEL[s.level])}</span>
+          ${s.unverified ? '<span class="pill unverified">nepatikrinta</span>' : ''}
+          <span class="pill ${s.dir === 'uz' ? 'stance-uz' : s.dir === 'pries' ? 'stance-pries' : 'stance-neutralu'}">kryptis: ${esc(STANCE_LABEL[s.dir])} (spėjimas)</span>
+          ${s.tags.map(t => `<span class="pill tag">#${esc(t)}</span>`).join('')}
+        </div>
+        <ul>${s.reasons.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
+        <div class="ai-actions">
+          <button type="button" class="btn primary small" data-act="ai-accept">Priimti pasiūlymą</button>
+          <button type="button" class="btn small" data-act="ai-reject">Atmesti</button>
+        </div>
+      </div>`;
+    }
+
     return `
     <section class="panel" data-note="etapas:vertinimas" data-note-label="Langas: vertinimas">
       <h2>Vertinimas <span style="color:var(--muted);font-weight:400">· liko ${inbox.length}</span></h2>
-      <p class="hint">Kiekvienam šaltiniui priskirk įrodymo lygį ir kryptį kiekvienos hipotezės atžvilgiu. Silpnas šaltinis — ne priežastis atmesti, bet jo svoris bus mažas.</p>
+      <p class="hint">Priskirk šaltinių hierarchijos lygį, atskirk faktą nuo interpretacijos ir nurodyk kryptį kiekvienai hipotezei. Silpnas šaltinis — ne priežastis atmesti, bet jo svoris mažas; vengtini nesveria visai.</p>
       <article class="item">
-        <div class="row"><h3>${esc(it.title)}</h3></div>
+        <div class="row"><h3>${esc(it.title)}</h3>${!it.url ? '<span class="pill unverified">nėra nuorodos</span>' : ''}</div>
         ${it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener" style="font-size:13px">${esc(it.url)}</a>` : ''}
         ${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}
+        ${aiHtml}
         <div style="margin-top:14px" class="field">
-          <label>Įrodymo lygis</label>
-          ${seg('level', [{ v: 'A', l: 'A' }, { v: 'B', l: 'B' }, { v: 'C', l: 'C' }, { v: 'D', l: 'D' }], evalDraft.level, 'lvl')}
+          <label>Šaltinio lygis (hierarchija)</label>
+          ${seg('level', levelOpts, evalDraft.level, 'lvl')}
+        </div>
+        <div class="field">
+          <label><input type="checkbox" id="ev-unverified" ${evalDraft.unverified ? 'checked' : ''} style="width:auto;margin-right:6px"> Šaltinis nepatikrintas (nuorodos nerasta / neaiški kilmė)</label>
+        </div>
+        <div class="field">
+          <label for="ev-fact">Faktas — ką šaltinis <b>nustatė</b></label>
+          <textarea id="ev-fact" placeholder="Tik tai, kas išmatuota / parodyta. Be interpretacijos.">${esc(evalDraft.fact)}</textarea>
+        </div>
+        <div class="field">
+          <label for="ev-interp">Interpretacija — ką tai <b>reiškia</b> mano klausimui</label>
+          <textarea id="ev-interp" placeholder="Tavo perskaitymas: kaip tai veikia hipotezes?">${esc(evalDraft.interp)}</textarea>
         </div>
         ${q.hypotheses.map(h => `
           <div class="field">
             <label>H: ${esc(h.text)}</label>
             ${seg('stance-' + h.id, [{ v: 'uz', l: 'Palaiko' }, { v: 'pries', l: 'Prieštarauja' }, { v: 'neutralu', l: 'Neutralu' }], evalDraft.stances[h.id] || 'neutralu', 'stance')}
+            ${evalDraft.stances[h.id] === 'pries' ? `<div style="margin-top:6px">${seg('kind-' + h.id, [{ v: 'akad', l: 'Akademinis ribotumas' }, { v: 'marg', l: 'Marginali kritika' }], evalDraft.kinds[h.id] || 'akad', 'kind')}</div>` : ''}
           </div>`).join('')}
         <div class="actions">
           <button class="btn primary" data-act="keep">Įtraukti į bazę</button>
@@ -866,26 +1162,29 @@
 
     const allTags = [...new Set(kept.flatMap(i => i.tags || []))].sort();
     const filtered = activeTagFilter ? kept.filter(i => (i.tags || []).includes(activeTagFilter)) : kept;
-    const byLevel = { A: [], B: [], C: [], D: [] };
-    filtered.forEach(i => byLevel[i.level].push(i));
+    const byLevel = { A: [], B: [], C: [], D: [], avoid: [] };
+    filtered.forEach(i => (byLevel[i.level] || byLevel.C).push(i));
 
     return `
     <section class="panel" data-note="etapas:sisteminimas" data-note-label="Langas: žinių bazė">
       <h2>Žinių bazė</h2>
-      <p class="hint">Įtraukti šaltiniai, sugrupuoti pagal įrodymo lygį. Žymos leidžia pjaustyti bazę temomis; spustelėk žymą filtravimui.</p>
+      <p class="hint">Įtraukti šaltiniai, sugrupuoti pagal hierarchijos lygį. Vengtini rodomi apačioje ir nesveria skaičiavime. Žymos leidžia pjaustyti bazę temomis.</p>
       <div class="taglist" style="margin-bottom:16px">
         <button data-tag="" class="${!activeTagFilter ? 'on' : ''}">visos</button>
         ${allTags.map(t => `<button data-tag="${esc(t)}" class="${activeTagFilter === t ? 'on' : ''}">#${esc(t)}</button>`).join('')}
       </div>
-      ${['A', 'B', 'C', 'D'].filter(l => byLevel[l].length).map(l => `
+      ${LEVEL_ORDER.filter(l => byLevel[l].length).map(l => `
         <p class="group-h">${esc(LEVEL_LABEL[l])} · ${byLevel[l].length}</p>
         ${byLevel[l].map(it => `
           <article class="item" data-id="${it.id}" data-note="saltinis:${q.id}:${it.id}" data-note-label="Šaltinio kortelė: ${esc(it.title.slice(0, 40))}…">
             <div class="row"><h3>${esc(it.title)}</h3></div>
-            ${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}
+            ${factInterp(it)}
+            ${!it.fact && !it.interp && it.note ? `<p class="note">${esc(it.note)}</p>` : ''}
             <div class="meta">${itemMeta(it)}${Object.entries(it.stances).filter(([, s]) => s !== 'neutralu').map(([hid, s]) => {
               const h = q.hypotheses.find(x => x.id === hid);
-              return h ? `<span class="pill stance-${s}">${esc(STANCE_LABEL[s])}: ${esc(h.text.slice(0, 44))}…</span>` : '';
+              if (!h) return '';
+              const kind = s === 'pries' && it.kinds && it.kinds[hid] === 'marg' ? ' (marginali)' : '';
+              return `<span class="pill stance-${s}">${esc(STANCE_LABEL[s])}${kind}: ${esc(h.text.slice(0, 40))}…</span>`;
             }).join('')}</div>
             <div class="actions">
               <button class="btn small" data-act="add-tag">+ žyma</button>
@@ -896,11 +1195,20 @@
     </section>`;
   }
 
+  function evLi(i, hid) {
+    const kind = i.stances[hid] === 'pries' && i.kinds && i.kinds[hid] === 'marg';
+    return `<li><span class="pill lvl-${i.level}">${i.level === 'avoid' ? 'Ø' : i.level}</span><span>${esc(i.fact || i.title)}${kind ? ' <em style="color:var(--muted)">(marginali)</em>' : ''}</span></li>`;
+  }
+
   function viewSinteze(q) {
+    const consSeg = (h) => `<span class="seg small" data-seg="cons-${h.id}">${
+      [4, 3, 2, 1].map(c => `<button type="button" data-cons="${c}" class="${h.consensus === c ? 'on' : ''}" title="${CONSENSUS[c].label}">${CONSENSUS[c].dots}</button>`).join('')
+    }<button type="button" data-cons="0" class="${!h.consensus ? 'on' : ''}">—</button></span>`;
+
     return `
     <section class="panel" data-note="etapas:sinteze" data-note-label="Langas: sintezė">
       <h2>Hipotezės ir išvados</h2>
-      <p class="hint">Pasitikėjimas skaičiuojamas automatiškai iš bazės įrodymų. Išvadą rašyk tik tada, kai kryptis stabili; „peržiūrima" reiškia, kad laukiame naujų duomenų.</p>
+      <p class="hint">Konsensuso lygis žymimas ranka (ką sako mokslas). Pasitikėjimas skaičiuojamas iš tavo bazės. Išvadą „patvirtinta / paneigta" galima žymėti tik užpildžius privalomus elementus.</p>
       <form id="add-hyp" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
         <input type="text" id="f-hyp" required placeholder="Nauja hipotezė — patikrinamas teiginys…" style="flex:1 1 300px;background:var(--ground);border:1px solid var(--line);border-radius:7px;padding:8px 10px;color:var(--ink)">
         <button class="btn primary" type="submit">Pridėti hipotezę</button>
@@ -908,35 +1216,72 @@
       ${q.hypotheses.map(h => {
         const conf = confidence(q, h.id);
         const uz = q.items.filter(i => i.stage === 'kept' && i.stances[h.id] === 'uz');
-        const pries = q.items.filter(i => i.stage === 'kept' && i.stances[h.id] === 'pries');
+        const priesAll = q.items.filter(i => i.stage === 'kept' && i.stances[h.id] === 'pries');
+        const ribot = priesAll.filter(i => !(i.kinds && i.kinds[h.id] === 'marg'));
+        const marg = priesAll.filter(i => i.kinds && i.kinds[h.id] === 'marg');
+        const div = divergence(q, h);
+        const comp = completeness(q, h);
         return `
         <article class="hyp" data-hyp="${h.id}" data-note="hipoteze:${q.id}:${h.id}" data-note-label="Hipotezės kortelė: ${esc(h.text.slice(0, 40))}…">
           <p class="statement">${esc(h.text)}</p>
+
           <div class="conf-row">
-            <span class="eyebrow" style="margin:0">Pasitikėjimas</span>
+            <span class="eyebrow" style="margin:0">Konsensusas</span>
+            ${consSeg(h)}
+            <span class="cons c${h.consensus}">${h.consensus ? CONSENSUS[h.consensus].label : 'nepažymėta'}</span>
+          </div>
+          <div class="conf-row" style="margin-top:8px">
+            <span class="eyebrow" style="margin:0">Bazės pasitikėjimas</span>
             <div class="conf-bar" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${conf ?? 50}" aria-label="Pasitikėjimas hipoteze">
               <div style="width:${conf ?? 0}%"></div>
             </div>
             <span class="conf-num">${conf === null ? 'nėra duomenų' : conf + ' %'}</span>
           </div>
+          ${div ? `<div class="warn-banner"><span>⚠</span><span>Tavo bazė rodo <b>${div.higher ? 'aukštesnį' : 'žemesnį'}</b> pasitikėjimą (${div.conf} %) nei pažymėtas konsensusas (${CONSENSUS[h.consensus].label}, ~${div.cons} %). ${div.higher ? 'Gali būti, kad bazė šališka (renki tik palaikančius) arba konsensusas per žemas.' : 'Gali būti, kad renki tik prieštaraujančius arba konsensusas per aukštas.'}</span></div>` : ''}
+
           <div class="ev-cols">
             <div class="ev-col uz"><h4>Palaiko · ${uz.length}</h4>
-              <ul>${uz.map(i => `<li><span class="pill lvl-${i.level}">${i.level}</span><span>${esc(i.title)}</span></li>`).join('') || '<li style="color:var(--muted)">—</li>'}</ul>
+              <ul>${uz.map(i => evLi(i, h.id)).join('') || '<li style="color:var(--muted)">—</li>'}</ul>
             </div>
-            <div class="ev-col pries"><h4>Prieštarauja · ${pries.length}</h4>
-              <ul>${pries.map(i => `<li><span class="pill lvl-${i.level}">${i.level}</span><span>${esc(i.title)}</span></li>`).join('') || '<li style="color:var(--muted)">—</li>'}</ul>
+            <div class="ev-col pries"><h4>Ribotumai · ${ribot.length}</h4>
+              <ul>${ribot.map(i => evLi(i, h.id)).join('') || '<li style="color:var(--muted)">—</li>'}</ul>
+              ${marg.length ? `<h4 style="margin-top:10px;color:var(--muted)">Marginali kritika · ${marg.length} <span style="font-weight:400;text-transform:none;letter-spacing:0">(nesveria)</span></h4>
+              <ul>${marg.map(i => evLi(i, h.id)).join('')}</ul>` : ''}
             </div>
           </div>
+
+          <div class="field" style="margin-top:14px">
+            <label for="ex-${h.id}">Gyvenimiškas pavyzdys <span style="color:var(--crit)">*</span></label>
+            <textarea id="ex-${h.id}" data-act="example" placeholder="Konkretus, kasdienis pavyzdys, iliustruojantis teiginį.">${esc(h.example || '')}</textarea>
+          </div>
+          <div class="field">
+            <label for="contro-${h.id}">Kontroversijos <span style="color:var(--crit)">*</span></label>
+            <textarea id="contro-${h.id}" data-act="controversy" placeholder="Kur mokslininkai nesutaria?">${esc(h.controversy || '')}</textarea>
+            <input type="text" id="controdate-${h.id}" data-act="controversy-date" placeholder="Data / versija (pvz., 2016 arba 2024-03)" value="${esc(h.controversyDate || '')}" style="margin-top:6px;background:var(--ground);border:1px solid var(--line);border-radius:7px;padding:6px 10px;color:var(--ink)">
+          </div>
+
+          <div class="checklist">
+            <span class="completeness-tag ${comp.ready ? 'ready' : ''}">privalomi elementai: ${comp.done}/${comp.total}</span>
+            ${REQUIRED_FIELDS.map(f => `<div class="ci ${comp.state[f.key] ? 'ok' : ''}"><span class="mk">${comp.state[f.key] ? '✓' : '○'}</span> ${esc(f.label)}</div>`).join('')}
+          </div>
+
           <div class="field conclusion">
             <label for="concl-${h.id}">Išvada / pastabos</label>
             <textarea id="concl-${h.id}" data-act="conclusion" placeholder="Ką šiuo metu rodo įrodymų visuma?">${esc(h.conclusion || '')}</textarea>
           </div>
+
           <div class="status-row">
             <span class="eyebrow" style="margin:0">Būsena</span>
             <span class="seg small" data-seg="status">
-              ${HYP_STATUSES.map(s => `<button type="button" data-status="${s}" class="${h.status === s ? 'on' : ''}">${s}</button>`).join('')}
+              ${HYP_STATUSES.map(s => {
+                const conclusive = s === 'patvirtinta' || s === 'paneigta';
+                const locked = conclusive && !comp.ready;
+                return `<button type="button" data-status="${s}" class="${h.status === s ? 'on' : ''}" ${locked ? 'disabled title="Užpildyk privalomus elementus" style="opacity:.45;cursor:not-allowed"' : ''}>${s}</button>`;
+              }).join('')}
             </span>
           </div>
+          ${h.concludedAt ? `<div class="stamp" style="margin-top:8px">✓ fiksuota ${fmtDate(h.concludedAt)}</div>` : ''}
+          ${(h.history && h.history.length) ? `<details class="hist"><summary>istorija (${h.history.length})</summary><ul>${h.history.slice().reverse().map(e => `<li><span class="when">${fmtDate(e.at)}</span><span>${esc(e.what)}</span></li>`).join('')}</ul></details>` : ''}
         </article>`;
       }).join('')}
     </section>`;
@@ -945,7 +1290,7 @@
   /* ───────── Įvykiai ───────── */
 
   document.querySelectorAll('nav.stages button').forEach(b =>
-    b.addEventListener('click', () => { activeStage = b.dataset.stage; evalDraft = null; render(); }));
+    b.addEventListener('click', () => { activeStage = b.dataset.stage; evalDraft = null; aiSuggestion = null; render(); }));
 
   document.getElementById('back-btn').addEventListener('click', goHome);
 
@@ -963,9 +1308,19 @@
 
   document.getElementById('reset-btn').addEventListener('click', () => {
     if (confirm('Ištrinti jūsų pakeitimus ir grąžinti demo duomenis?')) {
-      state = seed(); evalDraft = null; activeTagFilter = null; save(); goHome();
+      state = seed(); evalDraft = null; aiSuggestion = null; activeTagFilter = null; homeTagFilter = null; save(); goHome();
     }
   });
+
+  function pushHist(h, what) { h.history = h.history || []; h.history.push({ at: Date.now(), what }); }
+
+  function newEvalDraft(it) {
+    return {
+      itemId: it.id, level: it.level || 'C',
+      fact: it.fact || '', interp: it.interp || '', unverified: !!it.unverified,
+      stances: { ...it.stances }, kinds: { ...(it.kinds || {}) }
+    };
+  }
 
   function bindMain(q) {
     const main = document.getElementById('main');
@@ -973,68 +1328,129 @@
     const addForm = main.querySelector('#add-form');
     if (addForm) addForm.addEventListener('submit', e => {
       e.preventDefault();
-      q.items.unshift({
-        id: uid(),
+      const url = main.querySelector('#f-url').value.trim();
+      q.items.unshift(newItem({
         title: main.querySelector('#f-title').value.trim(),
-        url: main.querySelector('#f-url').value.trim(),
+        url,
         note: main.querySelector('#f-note').value.trim(),
-        stage: 'inbox', level: 'C', tags: [], stances: {}
-      });
+        unverified: !url,
+        stage: 'inbox', level: 'C'
+      }));
       save(); render();
     });
 
     const addHyp = main.querySelector('#add-hyp');
     if (addHyp) addHyp.addEventListener('submit', e => {
       e.preventDefault();
-      q.hypotheses.push({ id: uid(), text: main.querySelector('#f-hyp').value.trim(), status: 'formuluojama', conclusion: '' });
+      q.hypotheses.push(newHyp({ text: main.querySelector('#f-hyp').value.trim() }));
       save(); render();
     });
 
+    // Vertinimo laukai — atnaujina juodraštį (evalDraft)
+    const fFact = main.querySelector('#ev-fact');
+    if (fFact) fFact.addEventListener('input', () => { evalDraft.fact = fFact.value; });
+    const fInterp = main.querySelector('#ev-interp');
+    if (fInterp) fInterp.addEventListener('input', () => { evalDraft.interp = fInterp.value; });
+    const fUnv = main.querySelector('#ev-unverified');
+    if (fUnv) fUnv.addEventListener('change', () => { evalDraft.unverified = fUnv.checked; });
+
+    // Hipotezės teksto laukai (change → įrašom + istorija)
+    main.querySelectorAll('textarea[data-act], input[data-act]').forEach(el => {
+      const act = el.dataset.act;
+      const fieldActs = { conclusion: 'conclusion', example: 'example', controversy: 'controversy', 'controversy-date': 'controversyDate' };
+      if (!fieldActs[act]) return;
+      el.addEventListener('change', () => {
+        const h = q.hypotheses.find(x => x.id === el.closest('.hyp').dataset.hyp);
+        const key = fieldActs[act];
+        if (h[key] === el.value) return;
+        h[key] = el.value;
+        if (act === 'conclusion') pushHist(h, 'atnaujinta išvada');
+        save(); render();
+      });
+    });
+
+    // Mygtukai (click)
     main.querySelectorAll('[data-act]').forEach(el => {
       const act = el.dataset.act;
-      if (act === 'conclusion') {
-        el.addEventListener('change', () => {
-          const h = q.hypotheses.find(x => x.id === el.closest('.hyp').dataset.hyp);
-          h.conclusion = el.value; save();
-        });
-        return;
-      }
+      if (['conclusion', 'example', 'controversy', 'controversy-date'].includes(act)) return; // jau tvarkoma aukščiau
       el.addEventListener('click', () => {
         const itemEl = el.closest('.item');
         const id = itemEl ? itemEl.dataset.id : null;
         const it = id ? q.items.find(i => i.id === id) : null;
+        const target = evalDraft ? q.items.find(i => i.id === evalDraft.itemId) : null;
 
-        if (act === 'to-eval') { activeStage = 'vertinimas'; evalDraft = { itemId: id, level: it.level || 'C', stances: { ...it.stances } }; }
-        if (act === 'discard' && it) { it.stage = 'discarded'; }
-        if (act === 're-eval' && it) { it.stage = 'inbox'; activeStage = 'vertinimas'; evalDraft = { itemId: id, level: it.level, stances: { ...it.stances } }; }
-        if (act === 'add-tag' && it) {
+        if (act === 'to-eval') { activeStage = 'vertinimas'; aiSuggestion = null; evalDraft = newEvalDraft(it); }
+        else if (act === 'discard' && it) { it.stage = 'discarded'; }
+        else if (act === 're-eval' && it) { it.stage = 'inbox'; activeStage = 'vertinimas'; aiSuggestion = null; evalDraft = newEvalDraft(it); }
+        else if (act === 'add-tag' && it) {
           const t = prompt('Nauja žyma (be #):');
-          if (t && t.trim()) { it.tags = [...new Set([...(it.tags || []), t.trim().toLowerCase()])]; }
+          if (t && t.trim()) it.tags = [...new Set([...(it.tags || []), t.trim().toLowerCase()])];
         }
-        if (act === 'keep' || act === 'discard-eval' || act === 'skip') {
-          const target = q.items.find(i => i.id === evalDraft.itemId);
-          if (act === 'keep') { target.level = evalDraft.level; target.stances = evalDraft.stances; target.stage = 'kept'; }
-          if (act === 'discard-eval') { target.stage = 'discarded'; }
-          if (act === 'skip') {
-            const idx = q.items.indexOf(target);
-            q.items.splice(idx, 1); q.items.push(target);
+        else if (act === 'ai-suggest' && target) { aiSuggestion = Object.assign({ itemId: target.id }, aiSuggest(target, q)); }
+        else if (act === 'ai-reject') { aiSuggestion = null; }
+        else if (act === 'ai-accept' && aiSuggestion) {
+          evalDraft.level = aiSuggestion.level;
+          evalDraft.unverified = aiSuggestion.unverified;
+          evalDraft.fact = aiSuggestion.fact;
+          evalDraft.interp = aiSuggestion.interp;
+          evalDraft.stances = { ...aiSuggestion.stances };
+          evalDraft.kinds = { ...aiSuggestion.kinds };
+          if (aiSuggestion.tags.length) target.tags = [...new Set([...(target.tags || []), ...aiSuggestion.tags])];
+          aiSuggestion = null;
+        }
+        else if ((act === 'keep' || act === 'discard-eval' || act === 'skip') && target) {
+          if (act === 'keep') {
+            target.level = evalDraft.level;
+            target.fact = evalDraft.fact.trim();
+            target.interp = evalDraft.interp.trim();
+            target.unverified = evalDraft.unverified;
+            target.stances = evalDraft.stances;
+            // ribotumo tipą laikom tik ten, kur kryptis „prieš"
+            const kinds = {};
+            for (const hid in evalDraft.stances) if (evalDraft.stances[hid] === 'pries') kinds[hid] = evalDraft.kinds[hid] || 'akad';
+            target.kinds = kinds;
+            target.stage = 'kept';
           }
-          evalDraft = null;
+          if (act === 'discard-eval') target.stage = 'discarded';
+          if (act === 'skip') { const idx = q.items.indexOf(target); q.items.splice(idx, 1); q.items.push(target); }
+          evalDraft = null; aiSuggestion = null;
         }
         save(); render();
       });
     });
 
+    // Segmentiniai perjungikliai
     main.querySelectorAll('.seg[data-seg] button').forEach(btn => {
       btn.addEventListener('click', () => {
+        const seg = btn.closest('.seg').dataset.seg;
         if (btn.dataset.lvl) { evalDraft.level = btn.dataset.lvl; render(); }
         else if (btn.dataset.stance) {
-          const hid = btn.closest('.seg').dataset.seg.replace('stance-', '');
-          evalDraft.stances[hid] = btn.dataset.stance; render();
+          const hid = seg.replace('stance-', '');
+          evalDraft.stances[hid] = btn.dataset.stance;
+          if (btn.dataset.stance === 'pries' && !evalDraft.kinds[hid]) evalDraft.kinds[hid] = 'akad';
+          render();
+        }
+        else if (btn.dataset.kind) {
+          const hid = seg.replace('kind-', '');
+          evalDraft.kinds[hid] = btn.dataset.kind; render();
+        }
+        else if (btn.dataset.cons !== undefined) {
+          const h = q.hypotheses.find(x => x.id === seg.replace('cons-', ''));
+          const c = +btn.dataset.cons;
+          if (h.consensus !== c) { h.consensus = c; pushHist(h, 'konsensusas → ' + (c ? CONSENSUS[c].label : 'nepažymėta')); save(); }
+          render();
         }
         else if (btn.dataset.status) {
+          if (btn.disabled) return;
           const h = q.hypotheses.find(x => x.id === btn.closest('.hyp').dataset.hyp);
-          h.status = btn.dataset.status; save(); render();
+          const s = btn.dataset.status;
+          if (h.status !== s) {
+            h.status = s;
+            if (s === 'patvirtinta' || s === 'paneigta') h.concludedAt = Date.now();
+            pushHist(h, 'būsena → ' + s);
+            save();
+          }
+          render();
         }
       });
     });
@@ -1139,6 +1555,38 @@
     const d = document.getElementById('fb-drawer');
     d.hidden = !d.hidden;
     renderFb();
+  });
+
+  /* ───────── Taisyklių modalas (iš learning modelio) ───────── */
+  document.getElementById('rules-btn').addEventListener('click', () => {
+    const back = document.createElement('div');
+    back.className = 'modal-back';
+    back.innerHTML = `
+      <div class="modal" role="dialog" aria-modal="true" aria-label="Informacijos rinkimo taisyklės">
+        <h2>Informacijos rinkimo taisyklės</h2>
+        <p class="hint" style="margin:0">Perimta iš Laulife „Learning" modelio. Šios taisyklės ir yra pagrindas, pagal kurį sudėlioti šio modulio laukai.</p>
+        <h3>Rinkimo taisyklės</h3>
+        <ul>
+          <li>Remtis tik akademiniu / moksliniu konsensusu — be retorikos, be asmeninių pozicijų.</li>
+          <li>Šaltinių hierarchija: recenzuojami žurnalai → monografijos / vadovėliai → pripažintos enciklopedijos → pirminiai tekstai. Vengti tinklaraščių ir neaiškios kilmės.</li>
+          <li>Konsensuso lygis kiekvienam teiginiui ir ribotumui (●●●●–●○○○).</li>
+          <li>Privalomi elementai: teiginys · šaltinis · patikimumas · kontroversijos (su data) · ribotumai · gyvenimiškas pavyzdys.</li>
+          <li>Faktą visada atskirti nuo interpretacijos.</li>
+          <li>Terminai: LT + EN; datos / versijos žymimos.</li>
+        </ul>
+        <h3>Proceso taisyklės (DI sluoksniui)</h3>
+        <ul>
+          <li>Tyrimas pirma — faktai netikrinami iš atminties.</li>
+          <li>Šaltiniai neprasimanomi — neradus, žymima „nepatikrinta".</li>
+          <li>Kiekvienas teiginys — konsensuso lygis + gyvenimiškas pavyzdys.</li>
+          <li>Ribotumai tik akademiškai pripažinti; kita — „marginali kritika".</li>
+        </ul>
+        <div class="close-row"><button type="button" class="btn primary" data-close>Uždaryti</button></div>
+      </div>`;
+    const close = () => back.remove();
+    back.addEventListener('click', e => { if (e.target === back || e.target.hasAttribute('data-close')) close(); });
+    document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); } });
+    document.body.appendChild(back);
   });
 
   applyHash();
