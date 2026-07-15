@@ -2040,3 +2040,16 @@
   render();
 })();
 </script>
+
+<script>
+/* Temos sinchronizacija su LifeOS apvalkalu (iframe): ?theme= + postMessage. */
+(function () {
+  function applyTheme(t) {
+    if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+  }
+  applyTheme(new URLSearchParams(location.search).get('theme'));
+  window.addEventListener('message', function (e) {
+    if (e.data && e.data.laulifeTheme) applyTheme(e.data.laulifeTheme);
+  });
+})();
+</script>
