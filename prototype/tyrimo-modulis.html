@@ -529,10 +529,11 @@
     </section>
 
     <nav class="stages" role="tablist" aria-label="Proceso etapai" data-note="tyrimas:etapu-juosta" data-note-label="Etapų juosta">
-      <button role="tab" data-stage="rinkimas">1 · Rinkimas <span class="count" id="c-rinkimas">0</span></button>
-      <button role="tab" data-stage="vertinimas">2 · Vertinimas <span class="count" id="c-vertinimas">0</span></button>
-      <button role="tab" data-stage="sisteminimas">3 · Sisteminimas <span class="count" id="c-sisteminimas">0</span></button>
-      <button role="tab" data-stage="sinteze">4 · Sintezė <span class="count" id="c-sinteze">0</span></button>
+      <button role="tab" data-stage="klausimai">1 · Klausimai <span class="count" id="c-klausimai">0</span></button>
+      <button role="tab" data-stage="rinkimas">2 · Rinkimas <span class="count" id="c-rinkimas">0</span></button>
+      <button role="tab" data-stage="vertinimas">3 · Vertinimas <span class="count" id="c-vertinimas">0</span></button>
+      <button role="tab" data-stage="sisteminimas">4 · Sisteminimas <span class="count" id="c-sisteminimas">0</span></button>
+      <button role="tab" data-stage="sinteze">5 · Sintezė <span class="count" id="c-sinteze">0</span></button>
     </nav>
 
     <div class="layout">
@@ -640,6 +641,11 @@
       {
         id: 'q1', createdAt: 1752400000000, tags: ['sveikata', 'įpročiai'],
         question: 'Ar reguliarus šalto vandens poveikis (šaltas dušas, maudynės) pagerina kasdienę savijautą ir energiją?',
+        subs: [
+          { id: 's1', text: 'Kiek laiko ir kokios temperatūros turi būti šaltas dušas, kad būtų poveikis?', answer: '' },
+          { id: 's2', text: 'Ar šalto dušo nauda skiriasi nuo maudynių atvirame šaltame vandenyje?', answer: '' },
+          { id: 's3', text: 'Ar yra grupių, kurioms šalto vandens poveikis pavojingas?', answer: 'Staigus šaltis pavojingas sergantiems širdies ligomis — Buijze RCT tokie dalyviai buvo išbraukti iš tyrimo.' }
+        ],
         hypotheses: [
           newHyp({ id: 'h1', text: 'Reguliarūs šalti dušai (≥30 s, ≥4 sav.) sumažina savo jaučiamą nuovargį ir sergamumą.', status: 'tikrinama',
             consensus: 2, example: 'Kolega mėnesį baigdavo dušą 45 s šaltu vandeniu ir teigia rečiau šąlantis — bet tai vienas atvejis, ne įrodymas.',
@@ -706,6 +712,9 @@
       {
         id: 'q2', createdAt: 1752500000000, tags: ['sveikata', 'miegas'],
         question: 'Ar melatonino papildai pagerina miego kokybę sveikiems suaugusiems?',
+        subs: [
+          { id: 's1', text: 'Kokia melatonino dozė optimali — ar didesnė reiškia geriau?', answer: '' }
+        ],
         hypotheses: [
           newHyp({ id: 'h1', text: 'Melatoninas (0,5–5 mg prieš miegą) sutrumpina užmigimo laiką bent 10 min.', status: 'tikrinama',
             consensus: 3, example: 'Draugas prieš egzaminus gerdavo 1 mg melatonino ir užmigdavo greičiau — pavienis atvejis, ne įrodymas.',
@@ -732,6 +741,7 @@
   let evalDraft = null; // { itemId, level, fact, interp, unverified, stances, kinds }
   let aiSuggestion = null; // ✦ pasiūlymo objektas vertinimo etape
   let editField = null; // { hypId, key } — kuris hipotezės laukas dabar redaguojamas
+  let editSub = null; // temos klausimo, kurio atsakymas redaguojamas, id
 
   // UI nuostatos (suskleidimo būsenos) — atskirai nuo duomenų, išlieka tarp sesijų.
   const UI_KEY = 'laulife-ui-v01';
@@ -813,6 +823,7 @@
     // Normalizuojam: seni įrašai gauna naujus learning laukus su numatytomis reikšmėmis.
     s.questions.forEach(q => {
       if (!Array.isArray(q.tags)) q.tags = [];
+      if (!Array.isArray(q.subs)) q.subs = [];
       q.hypotheses = (q.hypotheses || []).map(h => newHyp(h));
       q.items = (q.items || []).map(it => {
         const n = newItem(it);
@@ -902,7 +913,7 @@
   function goHome() { activeQuestionId = null; location.hash = ''; render(); }
   function openQuestion(id, stage) {
     activeQuestionId = id;
-    activeStage = stage || 'rinkimas';
+    activeStage = stage || 'klausimai';
     activeTagFilter = null; evalDraft = null;
     location.hash = '#/q/' + id;
     render();
@@ -912,7 +923,7 @@
     if (m && state.questions.some(q => q.id === m[1])) activeQuestionId = m[1];
     else activeQuestionId = null;
   }
-  window.addEventListener('hashchange', () => { applyHash(); evalDraft = null; aiSuggestion = null; editField = null; render(); });
+  window.addEventListener('hashchange', () => { applyHash(); evalDraft = null; aiSuggestion = null; editField = null; editSub = null; render(); });
 
   /* ───────── Atvaizdavimas ───────── */
 
@@ -1042,6 +1053,7 @@
   function renderResearch(q) {
     const c = counts(q);
     document.getElementById('question-text').textContent = q.question;
+    document.getElementById('c-klausimai').textContent = (q.subs || []).filter(s => !s.answer).length;
     document.getElementById('c-rinkimas').textContent = c.inbox;
     document.getElementById('c-vertinimas').textContent = c.inbox;
     document.getElementById('c-sisteminimas').textContent = c.kept;
@@ -1063,7 +1075,8 @@
       b.setAttribute('aria-selected', b.dataset.stage === activeStage ? 'true' : 'false'));
 
     const main = document.getElementById('main');
-    if (activeStage === 'rinkimas') main.innerHTML = viewRinkimas(q);
+    if (activeStage === 'klausimai') main.innerHTML = viewKlausimai(q);
+    else if (activeStage === 'rinkimas') main.innerHTML = viewRinkimas(q);
     else if (activeStage === 'vertinimas') main.innerHTML = viewVertinimas(q);
     else if (activeStage === 'sisteminimas') main.innerHTML = viewSisteminimas(q);
     else main.innerHTML = viewSinteze(q);
@@ -1083,6 +1096,38 @@
       ${it.fact ? `<div class="fact"><span class="tag-lbl">faktas</span><span>${esc(it.fact)}</span></div>` : ''}
       ${it.interp ? `<div class="interp"><span class="tag-lbl">interpretacija</span><span>${esc(it.interp)}</span></div>` : ''}
     </div>`;
+  }
+
+  function viewKlausimai(q) {
+    const subs = q.subs || [];
+    return `
+    <section class="panel" data-note="etapas:klausimai" data-note-label="Langas: temos klausimai">
+      <h2>Temos klausimai</h2>
+      <p class="hint">Į ką konkrečiai nori atsakyti šiame tyrime? Užsirašyk klausimus kortelėmis. Atsakęs pažymėk, o patikrinamus klausimus paversk hipotezėmis.</p>
+      <form class="add-form" id="add-sub">
+        <div class="field"><label for="f-sub">Naujas klausimas</label><input type="text" id="f-sub" required placeholder="pvz., Kiek laiko turi trukti šaltas dušas, kad būtų poveikis?"></div>
+        <button class="btn primary" type="submit">Pridėti klausimą</button>
+      </form>
+      ${subs.length ? subs.map(s => {
+        const editing = editSub === s.id;
+        return `
+        <article class="item" data-sub="${s.id}" data-note="temos-klausimas:${q.id}:${s.id}" data-note-label="Temos klausimas: ${esc(s.text.slice(0, 40))}…">
+          <div class="row"><h3>${esc(s.text)}</h3>${s.answer ? '<span class="pill lvl-A">atsakyta</span>' : '<span class="pill tag">neatsakyta</span>'}</div>
+          ${editing ? `
+            <textarea id="sub-ta-${s.id}" class="ef-ta" placeholder="Trumpas atsakymas pagal surinktus įrodymus.">${esc(s.answer || '')}</textarea>
+            <div class="ef-row">
+              <button type="button" class="btn small primary" data-act="sub-save">Išsaugoti</button>
+              <button type="button" class="btn small" data-act="sub-cancel">Atšaukti</button>
+            </div>`
+          : s.answer ? `<div class="fi"><div class="fact"><span class="tag-lbl">atsakymas</span><span>${esc(s.answer)}</span></div></div>` : ''}
+          <div class="actions">
+            ${!editing ? `<button class="btn small primary" data-act="sub-answer">${s.answer ? 'Redaguoti atsakymą' : 'Atsakyti'}</button>` : ''}
+            <button class="btn small" data-act="sub-tohyp" title="Sukurti hipotezę iš šio klausimo">→ Hipotezė</button>
+            <button class="btn danger small" data-act="sub-del">Šalinti</button>
+          </div>
+        </article>`;
+      }).join('') : '<div class="empty">Klausimų dar nėra — pridėk pirmą viršuje.</div>'}
+    </section>`;
   }
 
   function viewRinkimas(q) {
@@ -1365,7 +1410,7 @@
   /* ───────── Įvykiai ───────── */
 
   document.querySelectorAll('nav.stages button').forEach(b =>
-    b.addEventListener('click', () => { activeStage = b.dataset.stage; evalDraft = null; aiSuggestion = null; editField = null; render(); }));
+    b.addEventListener('click', () => { activeStage = b.dataset.stage; evalDraft = null; aiSuggestion = null; editField = null; editSub = null; render(); }));
 
   document.getElementById('back-btn').addEventListener('click', goHome);
 
@@ -1374,16 +1419,16 @@
     const input = document.getElementById('f-question');
     const text = input.value.trim();
     if (!text) return;
-    const nq = { id: uid(), createdAt: Date.now(), question: text, tags: homeTagFilter ? [homeTagFilter] : [], hypotheses: [], items: [] };
+    const nq = { id: uid(), createdAt: Date.now(), question: text, tags: homeTagFilter ? [homeTagFilter] : [], subs: [], hypotheses: [], items: [] };
     state.questions.unshift(nq);
     input.value = '';
     save();
-    openQuestion(nq.id, 'sinteze'); // pirmas žingsnis po klausimo — suformuluoti hipotezę
+    openQuestion(nq.id, 'klausimai'); // pirmas žingsnis — išsigryninti, ką nori atsakyti
   });
 
   document.getElementById('reset-btn').addEventListener('click', () => {
     if (confirm('Ištrinti jūsų pakeitimus ir grąžinti demo duomenis?')) {
-      state = seed(); evalDraft = null; aiSuggestion = null; editField = null; activeTagFilter = null; homeTagFilter = null; save(); goHome();
+      state = seed(); evalDraft = null; aiSuggestion = null; editField = null; editSub = null; activeTagFilter = null; homeTagFilter = null; save(); goHome();
     }
   });
 
@@ -1418,6 +1463,13 @@
     if (addHyp) addHyp.addEventListener('submit', e => {
       e.preventDefault();
       q.hypotheses.push(newHyp({ text: main.querySelector('#f-hyp').value.trim() }));
+      save(); render();
+    });
+
+    const addSub = main.querySelector('#add-sub');
+    if (addSub) addSub.addEventListener('submit', e => {
+      e.preventDefault();
+      q.subs.push({ id: uid(), text: main.querySelector('#f-sub').value.trim(), answer: '' });
       save(); render();
     });
 
@@ -1472,8 +1524,29 @@
         const id = itemEl ? itemEl.dataset.id : null;
         const it = id ? q.items.find(i => i.id === id) : null;
         const target = evalDraft ? q.items.find(i => i.id === evalDraft.itemId) : null;
+        const subEl = el.closest('[data-sub]');
+        const sub = subEl ? (q.subs || []).find(s => s.id === subEl.dataset.sub) : null;
 
-        if (act === 'to-eval') { activeStage = 'vertinimas'; aiSuggestion = null; evalDraft = newEvalDraft(it); }
+        if (act === 'sub-answer' && sub) {
+          editSub = sub.id;
+          setTimeout(() => { const t = document.getElementById('sub-ta-' + sub.id); if (t) { t.focus(); t.selectionStart = t.value.length; } }, 0);
+        }
+        else if (act === 'sub-save' && sub) {
+          const t = main.querySelector('#sub-ta-' + sub.id);
+          sub.answer = t ? t.value.trim() : '';
+          editSub = null;
+        }
+        else if (act === 'sub-cancel') { editSub = null; }
+        else if (act === 'sub-tohyp' && sub) {
+          q.hypotheses.push(newHyp({ text: sub.text }));
+          activeStage = 'sinteze';
+        }
+        else if (act === 'sub-del' && sub) {
+          if (!confirm('Ištrinti šį klausimą?')) return;
+          q.subs = q.subs.filter(s => s.id !== sub.id);
+          if (editSub === sub.id) editSub = null;
+        }
+        else if (act === 'to-eval') { activeStage = 'vertinimas'; aiSuggestion = null; evalDraft = newEvalDraft(it); }
         else if (act === 'discard' && it) { it.stage = 'discarded'; }
         else if (act === 're-eval' && it) { it.stage = 'inbox'; activeStage = 'vertinimas'; aiSuggestion = null; evalDraft = newEvalDraft(it); }
         else if (act === 'add-tag' && it) {
