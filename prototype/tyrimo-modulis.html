@@ -1293,23 +1293,31 @@
       let aiHtml = `
         <div class="ef-row">
           <button type="button" class="ai-btn" data-act="ai-suggest" style="padding:4px 12px;font-size:12.5px">✦ DI pasiūlymas</button>
+          ${e.url ? `<button type="button" class="ai-btn" data-act="ai-fetch" style="padding:4px 12px;font-size:12.5px">✦ Nuskaityti šaltinį</button>` : ''}
         </div>`;
       if (aiSuggestion && aiSuggestion.evId === e.id) {
         const s = aiSuggestion;
-        aiHtml += `
+        if (s.loading) {
+          aiHtml += `<div class="ai-panel"><h4>✦ Skaitau šaltinį…</h4><ul><li>serveris siunčiasi puslapį ir DI traukia faktą — kelios sekundės</li></ul></div>`;
+        } else if (s.error) {
+          aiHtml += `<div class="ai-panel"><h4>✦ Nepavyko</h4><ul><li>${esc(s.error)}</li></ul></div>`;
+        } else {
+          aiHtml += `
         <div class="ai-panel">
-          <h4>✦ Siūlau (patikrink ir tvirtink)</h4>
+          <h4>✦ Siūlau (patikrink ir tvirtink)${s.fromUrl ? ' · iš nuorodos turinio' : ''}</h4>
           <div class="sug">
             <span class="pill lvl-${s.level}">${esc(LEVEL_LABEL[s.level])}</span>
             ${s.unverified ? '<span class="pill unverified">nepatikrinta</span>' : ''}
-            <span class="pill ${s.stance === 'uz' ? 'stance-uz' : s.stance === 'pries' ? 'stance-pries' : 'stance-neutralu'}">kryptis: ${esc(STANCE_LABEL[s.stance])} (spėjimas)</span>
+            <span class="pill ${s.stance === 'uz' ? 'stance-uz' : s.stance === 'pries' ? 'stance-pries' : 'stance-neutralu'}">kryptis: ${esc(STANCE_LABEL[s.stance])}${s.fromUrl ? '' : ' (spėjimas)'}</span>
           </div>
-          <ul>${s.reasons.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
+          ${s.fact ? `<div class="fi"><div class="fact"><span class="tag-lbl">faktas</span><span>${esc(s.fact)}</span></div>${s.interp ? `<div class="interp"><span class="tag-lbl">interpretacija</span><span>${esc(s.interp)}</span></div>` : ''}</div>` : ''}
+          <ul>${(s.reasons || []).map(r => `<li>${esc(r)}</li>`).join('')}</ul>
           <div class="ai-actions">
             <button type="button" class="btn primary small" data-act="ai-accept">Priimti</button>
             <button type="button" class="btn small" data-act="ai-reject">Atmesti</button>
           </div>
         </div>`;
+        }
       }
       return `
       <article class="item" data-ev="${e.id}">
@@ -1548,6 +1556,38 @@
     else if (has(text, ['pagerina', 'sumažina', 'padeda', 'efektyv', 'palaiko', 'rodo poveikį', 'reikšming', 'mažiau'])) stance = 'uz';
 
     return { level, unverified, stance, reasons };
+  }
+
+  /* ✦ Šaltinio nuskaitymas per appso backend (/api/ai, veiksmas vet-source).
+     Veikia tik lifeos.lol appse (iframe — tas pats domenas). Artefakte / atidarius
+     failą tiesiogiai fetch nepavyks — parodom sąžiningą paaiškinimą. */
+  async function aiFetchSource(ev, t) {
+    aiSuggestion = { evId: ev.id, loading: true };
+    render();
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'vet-source', url: ev.url, claim: t.name + (t.desc ? ' — ' + t.desc : '') })
+      });
+      const data = await res.json().catch(() => null);
+      if (data && data.ok && data.suggestion) {
+        const s = data.suggestion;
+        aiSuggestion = {
+          evId: ev.id, fromUrl: true,
+          level: s.level, stance: s.stance, unverified: false,
+          fact: s.fact, interp: s.interp,
+          reasons: (s.reasons && s.reasons.length ? s.reasons : ['ištraukta iš nuorodos turinio'])
+        };
+      } else if (data && data.unverified) {
+        aiSuggestion = { evId: ev.id, error: (data.error || 'Nuorodos pasiekti nepavyko.') + ' Šaltinis žymėtinas „nepatikrinta".' };
+      } else {
+        aiSuggestion = { evId: ev.id, error: (data && data.error) || 'Serveris negrąžino pasiūlymo.' };
+      }
+    } catch (e2) {
+      aiSuggestion = { evId: ev.id, error: 'Nuskaitymas veikia tik lifeos.lol appse (reikia backend). Čia naudok ✦ DI pasiūlymą (heuristika iš pavadinimo).' };
+    }
+    render();
   }
 
   /* ───────── ✦ AI konsultacija temos kontekste ───────── */
@@ -1923,11 +1963,15 @@
           if (editEvId === ev.id) { editEvId = null; aiSuggestion = null; }
         }
         else if (act === 'ai-suggest' && ev) { aiSuggestion = Object.assign({ evId: ev.id }, aiSuggest(ev)); }
+        else if (act === 'ai-fetch' && ev) { aiFetchSource(ev, t); return; }
         else if (act === 'ai-reject') { aiSuggestion = null; }
         else if (act === 'ai-accept' && aiSuggestion && ev) {
+          if (aiSuggestion.loading || aiSuggestion.error) return;
           ev.level = aiSuggestion.level;
-          ev.unverified = aiSuggestion.unverified;
+          ev.unverified = !!aiSuggestion.unverified;
           ev.stance = aiSuggestion.stance;
+          if (aiSuggestion.fact) ev.fact = aiSuggestion.fact;
+          if (aiSuggestion.interp) ev.interp = aiSuggestion.interp;
           if (ev.stance === 'pries' && !ev.kind) ev.kind = 'akad';
           aiSuggestion = null;
         }
