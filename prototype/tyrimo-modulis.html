@@ -288,6 +288,53 @@
   .group-h:first-of-type { margin-top: 0; }
 
   footer.note { margin-top: 26px; color: var(--muted); font-size: 12.5px; max-width: 78ch; }
+
+  /* ── Pastabos tobulinimui ── */
+  [data-note] { position: relative; }
+  nav.stages[data-note] { padding-right: 36px; }
+  .note-btn {
+    position: absolute; top: 8px; right: 8px; z-index: 5;
+    width: 26px; height: 26px; border-radius: 99px;
+    border: 1px solid var(--line); background: var(--surface);
+    color: var(--muted); font-size: 13px; line-height: 1; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    opacity: .5;
+  }
+  [data-note]:hover > .note-btn, .note-btn:focus-visible { opacity: 1; }
+  .note-btn:hover { border-color: var(--warn); color: var(--warn); }
+  .note-btn.has-note { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); opacity: 1; }
+  .note-editor {
+    margin-top: 10px; padding: 10px; border: 1px dashed var(--warn);
+    border-radius: 8px; background: var(--warn-soft); flex-basis: 100%;
+  }
+  .note-editor textarea {
+    width: 100%; min-height: 54px; resize: vertical; box-sizing: border-box;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+    padding: 7px 9px; color: var(--ink);
+  }
+  .note-editor .row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  .note-editor .who {
+    font-family: var(--mono); font-size: 11px; color: var(--warn);
+    letter-spacing: .06em; text-transform: uppercase; margin-right: auto;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .fb-fab {
+    position: fixed; right: 18px; bottom: 18px; z-index: 50;
+    border-radius: 99px; padding: 10px 18px; font-weight: 700; font-size: 14px;
+    background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn);
+    box-shadow: var(--shadow);
+  }
+  .fb-drawer {
+    position: fixed; right: 18px; bottom: 68px; z-index: 50;
+    width: min(400px, calc(100vw - 36px)); max-height: 62vh; overflow-y: auto;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 16px;
+  }
+  .fb-drawer h2 { font-size: 15px; margin: 0 0 10px; }
+  .fb-note { border-bottom: 1px solid var(--line); padding: 9px 0; }
+  .fb-note:last-of-type { border-bottom: 0; }
+  .fb-note .lbl { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
+  .fb-note p { margin: 4px 0 8px; font-size: 13.5px; white-space: pre-wrap; }
 </style>
 
 <div class="shell">
@@ -302,20 +349,22 @@
 
   <!-- ── Klausimų puslapis ── -->
   <div id="home-view" hidden>
-    <div class="home-hero">
+    <div class="home-hero" data-note="pradzia:antraste" data-note-label="Pradžios antraštė">
       <h1>Ką nori išsiaiškinti?</h1>
       <p>Kiekvienas klausimas — atskiras tyrimas su savo šaltiniais, hipotezėmis ir išvadomis. Užduok klausimą taip, kad į jį būtų įmanoma atsakyti įrodymais.</p>
     </div>
-    <form class="ask" id="ask-form">
+    <form class="ask" id="ask-form" data-note="pradzia:klausimo-forma" data-note-label="Naujo klausimo forma">
       <input type="text" id="f-question" required placeholder="pvz., Ar protarpinis badavimas padeda išlaikyti svorį ilguoju laikotarpiu?" aria-label="Naujas tyrimo klausimas">
       <button class="btn primary" type="submit">Pradėti tyrimą</button>
     </form>
+    <div class="taglist" id="home-tags" style="margin:0 0 18px" data-note="pradzia:zymu-juosta" data-note-label="Žymų juosta"></div>
     <div class="qgrid" id="qgrid"></div>
+    <div id="home-kb" hidden style="margin-top:26px"></div>
   </div>
 
   <!-- ── Tyrimo vaizdas ── -->
   <div id="research-view" hidden>
-    <section class="question-card">
+    <section class="question-card" data-note="tyrimas:antraste" data-note-label="Tyrimo antraštė ir ciklas">
       <div class="q">
         <p class="eyebrow">Tyrimo klausimas</p>
         <h1 id="question-text"></h1>
@@ -326,7 +375,7 @@
       </div>
     </section>
 
-    <nav class="stages" role="tablist" aria-label="Proceso etapai">
+    <nav class="stages" role="tablist" aria-label="Proceso etapai" data-note="tyrimas:etapu-juosta" data-note-label="Etapų juosta">
       <button role="tab" data-stage="rinkimas">1 · Rinkimas <span class="count" id="c-rinkimas">0</span></button>
       <button role="tab" data-stage="vertinimas">2 · Vertinimas <span class="count" id="c-vertinimas">0</span></button>
       <button role="tab" data-stage="sisteminimas">3 · Sisteminimas <span class="count" id="c-sisteminimas">0</span></button>
@@ -337,7 +386,7 @@
       <main id="main"></main>
 
       <aside>
-        <section class="panel">
+        <section class="panel" data-note="sonas:bazes-busena" data-note-label="Šoninis langas: bazės būsena">
           <h2>Bazės būsena</h2>
           <div class="stat"><span class="k">Surinkta iš viso</span><span class="v" id="s-total">0</span></div>
           <div class="stat"><span class="k">Laukia vertinimo</span><span class="v" id="s-inbox">0</span></div>
@@ -345,7 +394,7 @@
           <div class="stat"><span class="k">Atmesta</span><span class="v" id="s-discarded">0</span></div>
           <div class="stat"><span class="k">Aukšto lygio (A–B) dalis</span><span class="v" id="s-quality">–</span></div>
         </section>
-        <section class="panel">
+        <section class="panel" data-note="sonas:lygiai" data-note-label="Šoninis langas: įrodymų lygiai">
           <h2>Kaip skaityti lygius</h2>
           <div class="lvl-help">
             <div class="lh"><span class="pill lvl-A">A</span> Sisteminės apžvalgos, metaanalizės, RCT</div>
@@ -362,8 +411,12 @@
   <footer class="note">
     Prototipas veikia tik šioje naršyklėje (duomenys saugomi lokaliai). Tikslas — pačiupinėti procesą
     „Klausimas → Rinkimas → Vertinimas → Sisteminimas → Sintezė" prieš perkeliant į Laulife appsą.
+    Spausk ✎ prie bet kurio lango ar kortelės ir užsirašyk, ką patobulinti.
   </footer>
 </div>
+
+<button type="button" class="fb-fab" id="fb-fab">✎ Pastabos (<span id="fb-count">0</span>)</button>
+<div class="fb-drawer" id="fb-drawer" hidden></div>
 
 <script>
 (function () {
@@ -383,7 +436,7 @@
   function seed() {
     return { questions: [
       {
-        id: 'q1', createdAt: 1752400000000,
+        id: 'q1', createdAt: 1752400000000, tags: ['sveikata', 'įpročiai'],
         question: 'Ar reguliarus šalto vandens poveikis (šaltas dušas, maudynės) pagerina kasdienę savijautą ir energiją?',
         hypotheses: [
           { id: 'h1', text: 'Reguliarūs šalti dušai (≥30 s, ≥4 sav.) sumažina savo jaučiamą nuovargį ir sergamumą.', status: 'tikrinama', conclusion: '' },
@@ -435,7 +488,7 @@
         ]
       },
       {
-        id: 'q2', createdAt: 1752500000000,
+        id: 'q2', createdAt: 1752500000000, tags: ['sveikata', 'miegas'],
         question: 'Ar melatonino papildai pagerina miego kokybę sveikiems suaugusiems?',
         hypotheses: [
           { id: 'h1', text: 'Melatoninas (0,5–5 mg prieš miegą) sutrumpina užmigimo laiką bent 10 min.', status: 'formuluojama', conclusion: '' }
@@ -460,17 +513,22 @@
   let evalDraft = null; // { itemId, level, stances }
 
   function load() {
+    let s = null;
     try {
       const raw = localStorage.getItem(LS_KEY);
-      if (raw) return JSON.parse(raw);
-      // migracija iš v0.1 (vienas klausimas be sąrašo)
-      const old = localStorage.getItem(LS_KEY_V01);
-      if (old) {
-        const s = JSON.parse(old);
-        return { questions: [{ id: 'q1', createdAt: Date.now(), question: s.question, hypotheses: s.hypotheses, items: s.items }] };
+      if (raw) s = JSON.parse(raw);
+      if (!s) {
+        // migracija iš v0.1 (vienas klausimas be sąrašo)
+        const old = localStorage.getItem(LS_KEY_V01);
+        if (old) {
+          const o = JSON.parse(old);
+          s = { questions: [{ id: 'q1', createdAt: Date.now(), question: o.question, hypotheses: o.hypotheses, items: o.items }] };
+        }
       }
     } catch (e) { /* sugadinti duomenys — pradedam iš naujo */ }
-    return seed();
+    if (!s) s = seed();
+    s.questions.forEach(q => { if (!Array.isArray(q.tags)) q.tags = []; });
+    return s;
   }
   function save() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
   function uid() { return 'x' + Math.random().toString(36).slice(2, 9); }
@@ -544,12 +602,34 @@
     research.hidden = !q;
     back.hidden = !q;
     if (q) renderResearch(q); else renderHome();
+    injectNotes();
   }
 
+  let homeTagFilter = null;
+
   function renderHome() {
+    // žymų juosta — bendras žodynas per visą learning modelį (klausimai + šaltiniai)
+    const tagbar = document.getElementById('home-tags');
+    const allTags = [...new Set([
+      ...state.questions.flatMap(q => q.tags || []),
+      ...state.questions.flatMap(q => q.items.flatMap(i => i.tags || []))
+    ])].sort((a, b) => a.localeCompare(b, 'lt'));
+    tagbar.innerHTML = `<button data-tag="" class="${!homeTagFilter ? 'on' : ''}">visos</button>` +
+      allTags.map(t => `<button data-tag="${esc(t)}" class="${homeTagFilter === t ? 'on' : ''}">#${esc(t)}</button>`).join('');
+    tagbar.querySelectorAll('button').forEach(b =>
+      b.addEventListener('click', () => { homeTagFilter = b.dataset.tag || null; render(); }));
+
     const grid = document.getElementById('qgrid');
     const sorted = [...state.questions].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    grid.innerHTML = sorted.length ? sorted.map(q => {
+    const shown = homeTagFilter
+      ? sorted.filter(q => (q.tags || []).includes(homeTagFilter))
+      : sorted;
+
+    const heading = homeTagFilter
+      ? `<p class="group-h" style="grid-column:1/-1;margin:0">Klausimai · #${esc(homeTagFilter)} · ${shown.length}</p>`
+      : '';
+
+    grid.innerHTML = heading + (shown.length ? shown.map(q => {
       const c = counts(q);
       const on = cycleStep(q);
       const hyps = q.hypotheses.slice(0, 2).map(h => {
@@ -560,13 +640,17 @@
           <span class="conf-num">${conf === null ? '–' : conf + ' %'}</span>
         </div>`;
       }).join('');
-      return `<article class="qcard" data-open="${q.id}">
+      return `<article class="qcard" data-open="${q.id}" data-note="klausimo-kortele:${q.id}" data-note-label="Klausimo kortelė: ${esc(q.question.slice(0, 40))}…">
         <p class="qtext">${esc(q.question)}</p>
         <div class="qstats">
           <span class="pill tag">etapas: ${esc(CYCLE_STEPS[on])}</span>
           <span class="pill ${c.inbox ? 'lvl-C' : 'tag'}">dėžutėje ${c.inbox}</span>
           <span class="pill ${c.kept ? 'lvl-A' : 'tag'}">bazėje ${c.kept}</span>
           <span class="pill tag">hipotezių ${q.hypotheses.length}</span>
+        </div>
+        <div class="qstats">
+          ${(q.tags || []).map(t => `<span class="pill stance-neutralu">#${esc(t)}</span>`).join('')}
+          <button type="button" class="btn small" data-qtag="${q.id}">+ žyma</button>
         </div>
         ${hyps}
         <span class="foot">
@@ -576,7 +660,7 @@
           <button type="button" class="btn small primary" data-go="${q.id}">Tęsti →</button>
         </span>
       </article>`;
-    }).join('') : '<div class="empty" style="grid-column:1/-1">Klausimų dar nėra — užduok pirmą viršuje.</div>';
+    }).join('') : `<div class="empty" style="grid-column:1/-1">${homeTagFilter ? 'Nė vienas klausimas neturi šios žymos.' : 'Klausimų dar nėra — užduok pirmą viršuje.'}</div>`);
 
     grid.querySelectorAll('[data-open]').forEach(card =>
       card.addEventListener('click', e => {
@@ -590,8 +674,46 @@
           }
           return;
         }
+        const tagBtn = e.target.closest('[data-qtag]');
+        if (tagBtn) {
+          e.stopPropagation();
+          const q = state.questions.find(x => x.id === tagBtn.dataset.qtag);
+          const t = prompt('Nauja žyma klausimui (be #):');
+          if (t && t.trim()) {
+            q.tags = [...new Set([...(q.tags || []), t.trim().toLowerCase()])];
+            save(); render();
+          }
+          return;
+        }
         openQuestion(card.dataset.open);
       }));
+
+    renderHomeKb();
+  }
+
+  // Sisteminimo rezultatai pagal žymą — per visus klausimus, atskira sekcija
+  function renderHomeKb() {
+    const kb = document.getElementById('home-kb');
+    if (!homeTagFilter) { kb.hidden = true; kb.innerHTML = ''; return; }
+    const rows = [];
+    state.questions.forEach(q =>
+      q.items.filter(i => i.stage === 'kept' && (i.tags || []).includes(homeTagFilter))
+        .forEach(i => rows.push({ q, i })));
+    kb.hidden = false;
+    kb.innerHTML = `<p class="group-h">Žinių bazė · #${esc(homeTagFilter)} · ${rows.length}</p>` +
+      (rows.length ? rows.map(({ q, i }) => `
+        <article class="item" data-openq="${q.id}" style="cursor:pointer" data-note="saltinis:${q.id}:${i.id}" data-note-label="Šaltinio kortelė: ${esc(i.title.slice(0, 40))}…">
+          <div class="row"><h3>${esc(i.title)}</h3></div>
+          ${i.note ? `<p class="note">${esc(i.note)}</p>` : ''}
+          <div class="meta">
+            <span class="pill lvl-${i.level}">${esc(LEVEL_LABEL[i.level])}</span>
+            ${(i.tags || []).map(t => `<span class="pill tag">#${esc(t)}</span>`).join('')}
+            <span class="pill stance-neutralu">klausimas: ${esc(q.question.slice(0, 56))}…</span>
+          </div>
+        </article>`).join('')
+      : '<div class="empty">Šioje žymoje dar nėra įvertintų šaltinių.</div>');
+    kb.querySelectorAll('[data-openq]').forEach(el =>
+      el.addEventListener('click', () => openQuestion(el.dataset.openq, 'sisteminimas')));
   }
 
   function renderResearch(q) {
@@ -634,7 +756,7 @@
   function viewRinkimas(q) {
     const inbox = q.items.filter(i => i.stage === 'inbox');
     return `
-    <section class="panel">
+    <section class="panel" data-note="etapas:rinkimas" data-note-label="Langas: rinkimo dėžutė">
       <h2>Gautų šaltinių dėžutė</h2>
       <p class="hint">Čia krenta viskas, ką randi: nuorodos, pastabos, straipsniai. Nieko nevertink — tik fiksuok. Vertinimas vyksta kitame etape.</p>
       <form class="add-form" id="add-form">
@@ -646,7 +768,7 @@
         <button class="btn primary" type="submit">Įtraukti į dėžutę</button>
       </form>
       ${inbox.length ? inbox.map(it => `
-        <article class="item" data-id="${it.id}">
+        <article class="item" data-id="${it.id}" data-note="saltinis:${q.id}:${it.id}" data-note-label="Šaltinio kortelė: ${esc(it.title.slice(0, 40))}…">
           <div class="row"><h3>${esc(it.title)}</h3></div>
           ${it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener" style="font-size:13px">${esc(it.url)}</a>` : ''}
           ${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}
@@ -671,7 +793,7 @@
     }</span>`;
 
     return `
-    <section class="panel">
+    <section class="panel" data-note="etapas:vertinimas" data-note-label="Langas: vertinimas">
       <h2>Vertinimas <span style="color:var(--muted);font-weight:400">· liko ${inbox.length}</span></h2>
       <p class="hint">Kiekvienam šaltiniui priskirk įrodymo lygį ir kryptį kiekvienos hipotezės atžvilgiu. Silpnas šaltinis — ne priežastis atmesti, bet jo svoris bus mažas.</p>
       <article class="item">
@@ -707,7 +829,7 @@
     filtered.forEach(i => byLevel[i.level].push(i));
 
     return `
-    <section class="panel">
+    <section class="panel" data-note="etapas:sisteminimas" data-note-label="Langas: žinių bazė">
       <h2>Žinių bazė</h2>
       <p class="hint">Įtraukti šaltiniai, sugrupuoti pagal įrodymo lygį. Žymos leidžia pjaustyti bazę temomis; spustelėk žymą filtravimui.</p>
       <div class="taglist" style="margin-bottom:16px">
@@ -717,7 +839,7 @@
       ${['A', 'B', 'C', 'D'].filter(l => byLevel[l].length).map(l => `
         <p class="group-h">${esc(LEVEL_LABEL[l])} · ${byLevel[l].length}</p>
         ${byLevel[l].map(it => `
-          <article class="item" data-id="${it.id}">
+          <article class="item" data-id="${it.id}" data-note="saltinis:${q.id}:${it.id}" data-note-label="Šaltinio kortelė: ${esc(it.title.slice(0, 40))}…">
             <div class="row"><h3>${esc(it.title)}</h3></div>
             ${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}
             <div class="meta">${itemMeta(it)}${Object.entries(it.stances).filter(([, s]) => s !== 'neutralu').map(([hid, s]) => {
@@ -735,7 +857,7 @@
 
   function viewSinteze(q) {
     return `
-    <section class="panel">
+    <section class="panel" data-note="etapas:sinteze" data-note-label="Langas: sintezė">
       <h2>Hipotezės ir išvados</h2>
       <p class="hint">Pasitikėjimas skaičiuojamas automatiškai iš bazės įrodymų. Išvadą rašyk tik tada, kai kryptis stabili; „peržiūrima" reiškia, kad laukiame naujų duomenų.</p>
       <form id="add-hyp" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
@@ -747,7 +869,7 @@
         const uz = q.items.filter(i => i.stage === 'kept' && i.stances[h.id] === 'uz');
         const pries = q.items.filter(i => i.stage === 'kept' && i.stances[h.id] === 'pries');
         return `
-        <article class="hyp" data-hyp="${h.id}">
+        <article class="hyp" data-hyp="${h.id}" data-note="hipoteze:${q.id}:${h.id}" data-note-label="Hipotezės kortelė: ${esc(h.text.slice(0, 40))}…">
           <p class="statement">${esc(h.text)}</p>
           <div class="conf-row">
             <span class="eyebrow" style="margin:0">Pasitikėjimas</span>
@@ -791,7 +913,7 @@
     const input = document.getElementById('f-question');
     const text = input.value.trim();
     if (!text) return;
-    const nq = { id: uid(), createdAt: Date.now(), question: text, hypotheses: [], items: [] };
+    const nq = { id: uid(), createdAt: Date.now(), question: text, tags: homeTagFilter ? [homeTagFilter] : [], hypotheses: [], items: [] };
     state.questions.unshift(nq);
     input.value = '';
     save();
@@ -879,6 +1001,104 @@
     main.querySelectorAll('.taglist button[data-tag]').forEach(btn =>
       btn.addEventListener('click', () => { activeTagFilter = btn.dataset.tag || null; render(); }));
   }
+
+  /* ───────── Pastabos tobulinimui ───────── */
+
+  const FB_KEY = 'laulife-tobulinimo-pastabos-v01';
+  let feedback = {};
+  try { feedback = JSON.parse(localStorage.getItem(FB_KEY)) || {}; } catch (e) { feedback = {}; }
+  function fbStore() { localStorage.setItem(FB_KEY, JSON.stringify(feedback)); renderFb(); }
+
+  function injectNotes() {
+    document.querySelectorAll('[data-note]').forEach(el => {
+      if (el.querySelector(':scope > .note-btn')) {
+        el.querySelector(':scope > .note-btn').classList.toggle('has-note', !!feedback[el.dataset.note]);
+        return;
+      }
+      const key = el.dataset.note;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'note-btn' + (feedback[key] ? ' has-note' : '');
+      btn.textContent = '✎';
+      btn.title = 'Pastaba tobulinimui';
+      btn.setAttribute('aria-label', 'Pastaba tobulinimui: ' + (el.dataset.noteLabel || key));
+      btn.addEventListener('click', e => { e.stopPropagation(); toggleNoteEditor(el, key); });
+      el.appendChild(btn);
+    });
+    renderFb();
+  }
+
+  function toggleNoteEditor(el, key) {
+    const open = el.querySelector(':scope > .note-editor');
+    if (open) { open.remove(); return; }
+    const label = el.dataset.noteLabel || key;
+    const box = document.createElement('div');
+    box.className = 'note-editor';
+    box.addEventListener('click', e => e.stopPropagation());
+    box.innerHTML = `
+      <textarea placeholder="Ką čia reikėtų patobulinti?">${esc(feedback[key] ? feedback[key].text : '')}</textarea>
+      <div class="row">
+        <span class="who">${esc(label)}</span>
+        <button type="button" class="btn small danger" data-fb="del">Šalinti</button>
+        <button type="button" class="btn small primary" data-fb="save">Išsaugoti</button>
+      </div>`;
+    box.querySelector('[data-fb="save"]').addEventListener('click', () => {
+      const text = box.querySelector('textarea').value.trim();
+      if (text) feedback[key] = { text, label, updatedAt: Date.now() };
+      else delete feedback[key];
+      fbStore(); box.remove();
+      const b = el.querySelector(':scope > .note-btn');
+      if (b) b.classList.toggle('has-note', !!feedback[key]);
+    });
+    box.querySelector('[data-fb="del"]').addEventListener('click', () => {
+      delete feedback[key];
+      fbStore(); box.remove();
+      const b = el.querySelector(':scope > .note-btn');
+      if (b) b.classList.remove('has-note');
+    });
+    el.appendChild(box);
+    box.querySelector('textarea').focus();
+  }
+
+  function renderFb() {
+    document.getElementById('fb-count').textContent = Object.keys(feedback).length;
+    const drawer = document.getElementById('fb-drawer');
+    if (drawer.hidden) return;
+    const entries = Object.entries(feedback).sort((a, b) => (b[1].updatedAt || 0) - (a[1].updatedAt || 0));
+    drawer.innerHTML = `
+      <h2>Pastabos tobulinimui</h2>
+      ${entries.length ? entries.map(([k, n]) => `
+        <div class="fb-note">
+          <span class="lbl">${esc(n.label || k)}</span>
+          <p>${esc(n.text)}</p>
+          <button type="button" class="btn small danger" data-k="${esc(k)}">Šalinti</button>
+        </div>`).join('') : '<div class="empty">Pastabų dar nėra. Spausk ✎ prie bet kurio lango ar kortelės.</div>'}
+      ${entries.length ? `<div style="display:flex;gap:8px;margin-top:12px">
+        <button type="button" class="btn small" id="fb-copy">Kopijuoti viską</button>
+        <button type="button" class="btn small danger" id="fb-clear">Išvalyti visas</button>
+      </div>` : ''}`;
+    drawer.querySelectorAll('[data-k]').forEach(b =>
+      b.addEventListener('click', () => { delete feedback[b.dataset.k]; fbStore(); injectNotes(); }));
+    const copy = drawer.querySelector('#fb-copy');
+    if (copy) copy.addEventListener('click', () => {
+      const md = 'Pastabos Laulife tyrimo modulio prototipui:\n' +
+        entries.map(([k, n]) => `- [${n.label || k}] ${n.text}`).join('\n');
+      navigator.clipboard.writeText(md).then(() => {
+        copy.textContent = 'Nukopijuota ✓';
+        setTimeout(() => { copy.textContent = 'Kopijuoti viską'; }, 1500);
+      });
+    });
+    const clear = drawer.querySelector('#fb-clear');
+    if (clear) clear.addEventListener('click', () => {
+      if (confirm('Ištrinti visas pastabas?')) { feedback = {}; fbStore(); injectNotes(); }
+    });
+  }
+
+  document.getElementById('fb-fab').addEventListener('click', () => {
+    const d = document.getElementById('fb-drawer');
+    d.hidden = !d.hidden;
+    renderFb();
+  });
 
   applyHash();
   render();
