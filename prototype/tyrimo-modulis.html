@@ -330,6 +330,37 @@
   .completeness-tag { font-family: var(--mono); font-size: 11px; padding: 1px 8px; border-radius: 99px; background: var(--surface-2); color: var(--muted); }
   .completeness-tag.ready { background: var(--good-soft); color: var(--good); }
 
+  /* Suskleidžiama hipotezės kortelė */
+  .hyp-head { display: flex; gap: 8px; align-items: flex-start; }
+  .hyp-head .statement { flex: 1; margin: 0; }
+  .col-btn {
+    border: 0; background: transparent; color: var(--muted);
+    font-size: 14px; line-height: 1; padding: 4px 6px; border-radius: 6px;
+    flex-shrink: 0; margin-top: 3px; font-family: var(--mono);
+  }
+  .col-btn:hover { color: var(--accent); background: var(--surface-2); }
+  .hyp-summary { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+  .hyp-summary .conf-bar { flex: 1 1 140px; height: 8px; }
+
+  /* Redaguojamas teksto laukas (tekstas → edit → textbox) */
+  .ef { margin-top: 12px; }
+  .ef-lbl { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .03em; margin-bottom: 4px; }
+  .ef-view { display: flex; gap: 10px; align-items: flex-start; }
+  .ef-text { font-size: 13.5px; white-space: pre-wrap; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .ef-empty { color: var(--muted); font-style: italic; }
+  .ef-view .btn { flex-shrink: 0; }
+  .ef-ta {
+    width: 100%; min-height: 64px; resize: vertical; box-sizing: border-box;
+    background: var(--ground); border: 1px solid var(--line); border-radius: 7px;
+    padding: 8px 10px; color: var(--ink);
+  }
+  .ef-date {
+    margin-top: 6px; width: 100%; box-sizing: border-box;
+    background: var(--ground); border: 1px solid var(--line); border-radius: 7px;
+    padding: 6px 10px; color: var(--ink);
+  }
+  .ef-row { display: flex; gap: 8px; margin-top: 8px; }
+
   /* ✦ DI pasiūlymo panelė */
   .ai-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
   .ai-btn {
@@ -700,6 +731,14 @@
   let activeTagFilter = null;
   let evalDraft = null; // { itemId, level, fact, interp, unverified, stances, kinds }
   let aiSuggestion = null; // ✦ pasiūlymo objektas vertinimo etape
+  let editField = null; // { hypId, key } — kuris hipotezės laukas dabar redaguojamas
+
+  // UI nuostatos (suskleidimo būsenos) — atskirai nuo duomenų, išlieka tarp sesijų.
+  const UI_KEY = 'laulife-ui-v01';
+  let ui = {};
+  try { ui = JSON.parse(localStorage.getItem(UI_KEY)) || {}; } catch (e) { ui = {}; }
+  ui.collapsed = ui.collapsed || {};
+  function uiSave() { localStorage.setItem(UI_KEY, JSON.stringify(ui)); }
 
   /* ───────── ✦ DI pasiūlymo simuliacija (prototipe — taisyklės; appse — Gemini) ─────────
      „DI siūlo, žmogus sprendžia". Heuristika iš domeno ir raktažodžių pagal learning
@@ -873,7 +912,7 @@
     if (m && state.questions.some(q => q.id === m[1])) activeQuestionId = m[1];
     else activeQuestionId = null;
   }
-  window.addEventListener('hashchange', () => { applyHash(); evalDraft = null; aiSuggestion = null; render(); });
+  window.addEventListener('hashchange', () => { applyHash(); evalDraft = null; aiSuggestion = null; editField = null; render(); });
 
   /* ───────── Atvaizdavimas ───────── */
 
@@ -1200,6 +1239,29 @@
     return `<li><span class="pill lvl-${i.level}">${i.level === 'avoid' ? 'Ø' : i.level}</span><span>${esc(i.fact || i.title)}${kind ? ' <em style="color:var(--muted)">(marginali)</em>' : ''}</span></li>`;
   }
 
+  // Redaguojamas hipotezės laukas: rodomas kaip tekstas, „Redaguoti" atveria textbox.
+  function efField(h, key, opts) {
+    const val = h[key] || '';
+    const editing = editField && editField.hypId === h.id && editField.key === key;
+    const req = opts.required ? ' <span style="color:var(--crit)">*</span>' : '';
+    let body;
+    if (editing) {
+      body = `
+        <textarea id="ef-${key}-${h.id}" class="ef-ta" placeholder="${esc(opts.placeholder)}">${esc(val)}</textarea>
+        ${key === 'controversy' ? `<input type="text" id="ef-date-${h.id}" class="ef-date" placeholder="Data / versija (pvz., 2016 arba 2024-03)" value="${esc(h.controversyDate || '')}">` : ''}
+        <div class="ef-row">
+          <button type="button" class="btn small primary" data-efsave="${key}">Išsaugoti</button>
+          <button type="button" class="btn small" data-efcancel>Atšaukti</button>
+        </div>`;
+    } else {
+      const text = val
+        ? `<span class="ef-text">${esc(val)}${key === 'controversy' && h.controversyDate ? ` <span class="stamp">(${esc(h.controversyDate)})</span>` : ''}</span>`
+        : `<span class="ef-text ef-empty">${esc(opts.empty)}</span>`;
+      body = `<div class="ef-view">${text}<button type="button" class="btn small" data-efedit="${key}">Redaguoti</button></div>`;
+    }
+    return `<div class="ef"><div class="ef-lbl">${opts.label}${req}</div>${body}</div>`;
+  }
+
   function viewSinteze(q) {
     const consSeg = (h) => `<span class="seg small" data-seg="cons-${h.id}">${
       [4, 3, 2, 1].map(c => `<button type="button" data-cons="${c}" class="${h.consensus === c ? 'on' : ''}" title="${CONSENSUS[c].label}">${CONSENSUS[c].dots}</button>`).join('')
@@ -1221,9 +1283,32 @@
         const marg = priesAll.filter(i => i.kinds && i.kinds[h.id] === 'marg');
         const div = divergence(q, h);
         const comp = completeness(q, h);
+        const isCol = !!ui.collapsed[q.id + ':' + h.id];
+
+        const head = `
+          <div class="hyp-head">
+            <button type="button" class="col-btn" data-collapse aria-expanded="${!isCol}" title="${isCol ? 'Išskleisti' : 'Suskleisti'}">${isCol ? '▸' : '▾'}</button>
+            <p class="statement">${esc(h.text)}</p>
+          </div>`;
+
+        if (isCol) {
+          // Suskleista: tik santrauka vienoje eilutėje.
+          return `
+        <article class="hyp collapsed" data-hyp="${h.id}" data-note="hipoteze:${q.id}:${h.id}" data-note-label="Hipotezės kortelė: ${esc(h.text.slice(0, 40))}…">
+          ${head}
+          <div class="hyp-summary">
+            <span class="cons c${h.consensus}">${h.consensus ? CONSENSUS[h.consensus].dots + ' ' + CONSENSUS[h.consensus].label : '— konsensusas'}</span>
+            <div class="conf-bar" aria-hidden="true"><div style="width:${conf ?? 0}%"></div></div>
+            <span class="conf-num">${conf === null ? '–' : conf + ' %'}</span>
+            <span class="completeness-tag ${comp.ready ? 'ready' : ''}">${comp.done}/${comp.total}</span>
+            <span class="pill tag">${esc(h.status)}</span>
+          </div>
+        </article>`;
+        }
+
         return `
         <article class="hyp" data-hyp="${h.id}" data-note="hipoteze:${q.id}:${h.id}" data-note-label="Hipotezės kortelė: ${esc(h.text.slice(0, 40))}…">
-          <p class="statement">${esc(h.text)}</p>
+          ${head}
 
           <div class="conf-row">
             <span class="eyebrow" style="margin:0">Konsensusas</span>
@@ -1250,25 +1335,15 @@
             </div>
           </div>
 
-          <div class="field" style="margin-top:14px">
-            <label for="ex-${h.id}">Gyvenimiškas pavyzdys <span style="color:var(--crit)">*</span></label>
-            <textarea id="ex-${h.id}" data-act="example" placeholder="Konkretus, kasdienis pavyzdys, iliustruojantis teiginį.">${esc(h.example || '')}</textarea>
-          </div>
-          <div class="field">
-            <label for="contro-${h.id}">Kontroversijos <span style="color:var(--crit)">*</span></label>
-            <textarea id="contro-${h.id}" data-act="controversy" placeholder="Kur mokslininkai nesutaria?">${esc(h.controversy || '')}</textarea>
-            <input type="text" id="controdate-${h.id}" data-act="controversy-date" placeholder="Data / versija (pvz., 2016 arba 2024-03)" value="${esc(h.controversyDate || '')}" style="margin-top:6px;background:var(--ground);border:1px solid var(--line);border-radius:7px;padding:6px 10px;color:var(--ink)">
-          </div>
+          ${efField(h, 'example', { label: 'Gyvenimiškas pavyzdys', required: true, placeholder: 'Konkretus, kasdienis pavyzdys, iliustruojantis teiginį.', empty: 'Pavyzdžio dar nėra — pridėk.' })}
+          ${efField(h, 'controversy', { label: 'Kontroversijos', required: true, placeholder: 'Kur mokslininkai nesutaria?', empty: 'Kontroversijos dar neaprašytos.' })}
 
           <div class="checklist">
             <span class="completeness-tag ${comp.ready ? 'ready' : ''}">privalomi elementai: ${comp.done}/${comp.total}</span>
             ${REQUIRED_FIELDS.map(f => `<div class="ci ${comp.state[f.key] ? 'ok' : ''}"><span class="mk">${comp.state[f.key] ? '✓' : '○'}</span> ${esc(f.label)}</div>`).join('')}
           </div>
 
-          <div class="field conclusion">
-            <label for="concl-${h.id}">Išvada / pastabos</label>
-            <textarea id="concl-${h.id}" data-act="conclusion" placeholder="Ką šiuo metu rodo įrodymų visuma?">${esc(h.conclusion || '')}</textarea>
-          </div>
+          ${efField(h, 'conclusion', { label: 'Išvada / pastabos', required: false, placeholder: 'Ką šiuo metu rodo įrodymų visuma?', empty: 'Išvados dar nėra.' })}
 
           <div class="status-row">
             <span class="eyebrow" style="margin:0">Būsena</span>
@@ -1290,7 +1365,7 @@
   /* ───────── Įvykiai ───────── */
 
   document.querySelectorAll('nav.stages button').forEach(b =>
-    b.addEventListener('click', () => { activeStage = b.dataset.stage; evalDraft = null; aiSuggestion = null; render(); }));
+    b.addEventListener('click', () => { activeStage = b.dataset.stage; evalDraft = null; aiSuggestion = null; editField = null; render(); }));
 
   document.getElementById('back-btn').addEventListener('click', goHome);
 
@@ -1308,7 +1383,7 @@
 
   document.getElementById('reset-btn').addEventListener('click', () => {
     if (confirm('Ištrinti jūsų pakeitimus ir grąžinti demo duomenis?')) {
-      state = seed(); evalDraft = null; aiSuggestion = null; activeTagFilter = null; homeTagFilter = null; save(); goHome();
+      state = seed(); evalDraft = null; aiSuggestion = null; editField = null; activeTagFilter = null; homeTagFilter = null; save(); goHome();
     }
   });
 
@@ -1354,25 +1429,44 @@
     const fUnv = main.querySelector('#ev-unverified');
     if (fUnv) fUnv.addEventListener('change', () => { evalDraft.unverified = fUnv.checked; });
 
-    // Hipotezės teksto laukai (change → įrašom + istorija)
-    main.querySelectorAll('textarea[data-act], input[data-act]').forEach(el => {
-      const act = el.dataset.act;
-      const fieldActs = { conclusion: 'conclusion', example: 'example', controversy: 'controversy', 'controversy-date': 'controversyDate' };
-      if (!fieldActs[act]) return;
-      el.addEventListener('change', () => {
-        const h = q.hypotheses.find(x => x.id === el.closest('.hyp').dataset.hyp);
-        const key = fieldActs[act];
-        if (h[key] === el.value) return;
-        h[key] = el.value;
-        if (act === 'conclusion') pushHist(h, 'atnaujinta išvada');
-        save(); render();
-      });
-    });
+    // Suskleidimas (būsena įsimenama localStorage)
+    main.querySelectorAll('[data-collapse]').forEach(btn =>
+      btn.addEventListener('click', () => {
+        const key = q.id + ':' + btn.closest('.hyp').dataset.hyp;
+        ui.collapsed[key] = !ui.collapsed[key];
+        uiSave(); render();
+      }));
+
+    // Redaguojami hipotezės laukai (tekstas → textbox)
+    main.querySelectorAll('[data-efedit]').forEach(btn =>
+      btn.addEventListener('click', () => {
+        editField = { hypId: btn.closest('.hyp').dataset.hyp, key: btn.dataset.efedit };
+        render();
+        const ta = document.getElementById('ef-' + editField.key + '-' + editField.hypId);
+        if (ta) { ta.focus(); ta.selectionStart = ta.value.length; }
+      }));
+    main.querySelectorAll('[data-efsave]').forEach(btn =>
+      btn.addEventListener('click', () => {
+        const h = q.hypotheses.find(x => x.id === btn.closest('.hyp').dataset.hyp);
+        const key = btn.dataset.efsave;
+        const ta = main.querySelector('#ef-' + key + '-' + h.id);
+        const v = ta ? ta.value.trim() : '';
+        if (h[key] !== v) {
+          h[key] = v;
+          if (key === 'conclusion') pushHist(h, 'atnaujinta išvada');
+        }
+        if (key === 'controversy') {
+          const d = main.querySelector('#ef-date-' + h.id);
+          if (d) h.controversyDate = d.value.trim();
+        }
+        editField = null; save(); render();
+      }));
+    main.querySelectorAll('[data-efcancel]').forEach(btn =>
+      btn.addEventListener('click', () => { editField = null; render(); }));
 
     // Mygtukai (click)
     main.querySelectorAll('[data-act]').forEach(el => {
       const act = el.dataset.act;
-      if (['conclusion', 'example', 'controversy', 'controversy-date'].includes(act)) return; // jau tvarkoma aukščiau
       el.addEventListener('click', () => {
         const itemEl = el.closest('.item');
         const id = itemEl ? itemEl.dataset.id : null;
