@@ -361,6 +361,33 @@
   }
   .ef-row { display: flex; gap: 8px; margin-top: 8px; }
 
+  /* Klausimai temos viduje */
+  .tq {
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; margin: 8px 0; background: var(--ground);
+    position: relative;
+  }
+  .tq .actions { margin-top: 8px; }
+  .tq-add { display: flex; gap: 8px; margin-top: 10px; }
+  .tq-add input {
+    flex: 1; background: var(--ground); border: 1px solid var(--line);
+    border-radius: 7px; padding: 6px 10px; color: var(--ink); font-size: 13.5px;
+  }
+
+  /* AI konsultacijos modalas */
+  .ai-modal .ctx {
+    background: var(--ground); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; font-size: 12.5px; color: var(--muted);
+    max-height: 140px; overflow-y: auto; white-space: pre-wrap;
+    font-family: var(--mono); margin: 10px 0;
+  }
+  .ai-modal textarea {
+    width: 100%; box-sizing: border-box; min-height: 64px; resize: vertical;
+    background: var(--ground); border: 1px solid var(--line); border-radius: 7px;
+    padding: 8px 10px; color: var(--ink);
+  }
+  .ai-modal .lbl { font-size: 12px; font-weight: 700; color: var(--muted); margin: 12px 0 4px; }
+
   /* ✦ DI pasiūlymo panelė */
   .ai-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
   .ai-btn {
@@ -529,7 +556,7 @@
     </section>
 
     <nav class="stages" role="tablist" aria-label="Proceso etapai" data-note="tyrimas:etapu-juosta" data-note-label="Etapų juosta">
-      <button role="tab" data-stage="klausimai">1 · Klausimai <span class="count" id="c-klausimai">0</span></button>
+      <button role="tab" data-stage="temos">1 · Temos <span class="count" id="c-temos">0</span></button>
       <button role="tab" data-stage="rinkimas">2 · Rinkimas <span class="count" id="c-rinkimas">0</span></button>
       <button role="tab" data-stage="vertinimas">3 · Vertinimas <span class="count" id="c-vertinimas">0</span></button>
       <button role="tab" data-stage="sisteminimas">4 · Sisteminimas <span class="count" id="c-sisteminimas">0</span></button>
@@ -641,10 +668,20 @@
       {
         id: 'q1', createdAt: 1752400000000, tags: ['sveikata', 'įpročiai'],
         question: 'Ar reguliarus šalto vandens poveikis (šaltas dušas, maudynės) pagerina kasdienę savijautą ir energiją?',
-        subs: [
-          { id: 's1', text: 'Kiek laiko ir kokios temperatūros turi būti šaltas dušas, kad būtų poveikis?', answer: '' },
-          { id: 's2', text: 'Ar šalto dušo nauda skiriasi nuo maudynių atvirame šaltame vandenyje?', answer: '' },
-          { id: 's3', text: 'Ar yra grupių, kurioms šalto vandens poveikis pavojingas?', answer: 'Staigus šaltis pavojingas sergantiems širdies ligomis — Buijze RCT tokie dalyviai buvo išbraukti iš tyrimo.' }
+        topics: [
+          {
+            id: 't1', name: 'Fiziologija ir mechanizmas', aiLog: [],
+            questions: [
+              { id: 't1q1', text: 'Kiek laiko ir kokios temperatūros turi būti šaltas dušas, kad būtų poveikis?', answer: '' },
+              { id: 't1q2', text: 'Ar yra grupių, kurioms šalto vandens poveikis pavojingas?', answer: 'Staigus šaltis pavojingas sergantiems širdies ligomis — Buijze RCT tokie dalyviai buvo išbraukti iš tyrimo.' }
+            ]
+          },
+          {
+            id: 't2', name: 'Praktinis taikymas', aiLog: [],
+            questions: [
+              { id: 't2q1', text: 'Ar šalto dušo nauda skiriasi nuo maudynių atvirame šaltame vandenyje?', answer: '' }
+            ]
+          }
         ],
         hypotheses: [
           newHyp({ id: 'h1', text: 'Reguliarūs šalti dušai (≥30 s, ≥4 sav.) sumažina savo jaučiamą nuovargį ir sergamumą.', status: 'tikrinama',
@@ -712,8 +749,13 @@
       {
         id: 'q2', createdAt: 1752500000000, tags: ['sveikata', 'miegas'],
         question: 'Ar melatonino papildai pagerina miego kokybę sveikiems suaugusiems?',
-        subs: [
-          { id: 's1', text: 'Kokia melatonino dozė optimali — ar didesnė reiškia geriau?', answer: '' }
+        topics: [
+          {
+            id: 't1', name: 'Dozavimas', aiLog: [],
+            questions: [
+              { id: 't1q1', text: 'Kokia melatonino dozė optimali — ar didesnė reiškia geriau?', answer: '' }
+            ]
+          }
         ],
         hypotheses: [
           newHyp({ id: 'h1', text: 'Melatoninas (0,5–5 mg prieš miegą) sutrumpina užmigimo laiką bent 10 min.', status: 'tikrinama',
@@ -823,7 +865,13 @@
     // Normalizuojam: seni įrašai gauna naujus learning laukus su numatytomis reikšmėmis.
     s.questions.forEach(q => {
       if (!Array.isArray(q.tags)) q.tags = [];
-      if (!Array.isArray(q.subs)) q.subs = [];
+      if (!Array.isArray(q.topics)) {
+        // migracija: seni pavieniai klausimai (subs) sukeliami į vieną temą
+        q.topics = (Array.isArray(q.subs) && q.subs.length)
+          ? [{ id: uid(), name: 'Bendri klausimai', questions: q.subs, aiLog: [] }]
+          : [];
+      }
+      q.topics.forEach(t => { if (!Array.isArray(t.aiLog)) t.aiLog = []; if (!Array.isArray(t.questions)) t.questions = []; });
       q.hypotheses = (q.hypotheses || []).map(h => newHyp(h));
       q.items = (q.items || []).map(it => {
         const n = newItem(it);
@@ -913,7 +961,7 @@
   function goHome() { activeQuestionId = null; location.hash = ''; render(); }
   function openQuestion(id, stage) {
     activeQuestionId = id;
-    activeStage = stage || 'klausimai';
+    activeStage = stage || 'temos';
     activeTagFilter = null; evalDraft = null;
     location.hash = '#/q/' + id;
     render();
@@ -1053,7 +1101,7 @@
   function renderResearch(q) {
     const c = counts(q);
     document.getElementById('question-text').textContent = q.question;
-    document.getElementById('c-klausimai').textContent = (q.subs || []).filter(s => !s.answer).length;
+    document.getElementById('c-temos').textContent = (q.topics || []).reduce((n, t) => n + t.questions.filter(s => !s.answer).length, 0);
     document.getElementById('c-rinkimas').textContent = c.inbox;
     document.getElementById('c-vertinimas').textContent = c.inbox;
     document.getElementById('c-sisteminimas').textContent = c.kept;
@@ -1075,7 +1123,7 @@
       b.setAttribute('aria-selected', b.dataset.stage === activeStage ? 'true' : 'false'));
 
     const main = document.getElementById('main');
-    if (activeStage === 'klausimai') main.innerHTML = viewKlausimai(q);
+    if (activeStage === 'temos') main.innerHTML = viewTemos(q);
     else if (activeStage === 'rinkimas') main.innerHTML = viewRinkimas(q);
     else if (activeStage === 'vertinimas') main.innerHTML = viewVertinimas(q);
     else if (activeStage === 'sisteminimas') main.innerHTML = viewSisteminimas(q);
@@ -1098,35 +1146,59 @@
     </div>`;
   }
 
-  function viewKlausimai(q) {
-    const subs = q.subs || [];
+  function tqCard(q, t, s) {
+    const editing = editSub === s.id;
     return `
-    <section class="panel" data-note="etapas:klausimai" data-note-label="Langas: temos klausimai">
-      <h2>Temos klausimai</h2>
-      <p class="hint">Į ką konkrečiai nori atsakyti šiame tyrime? Užsirašyk klausimus kortelėmis. Atsakęs pažymėk, o patikrinamus klausimus paversk hipotezėmis.</p>
-      <form class="add-form" id="add-sub">
-        <div class="field"><label for="f-sub">Naujas klausimas</label><input type="text" id="f-sub" required placeholder="pvz., Kiek laiko turi trukti šaltas dušas, kad būtų poveikis?"></div>
-        <button class="btn primary" type="submit">Pridėti klausimą</button>
+      <div class="tq" data-sub="${s.id}" data-note="temos-klausimas:${q.id}:${s.id}" data-note-label="Klausimas: ${esc(s.text.slice(0, 40))}…">
+        <div class="row"><h3 style="font-size:14px">${esc(s.text)}</h3>${s.answer ? '<span class="pill lvl-A">atsakyta</span>' : '<span class="pill tag">neatsakyta</span>'}</div>
+        ${editing ? `
+          <textarea id="sub-ta-${s.id}" class="ef-ta" placeholder="Trumpas atsakymas pagal surinktus įrodymus.">${esc(s.answer || '')}</textarea>
+          <div class="ef-row">
+            <button type="button" class="btn small primary" data-act="sub-save">Išsaugoti</button>
+            <button type="button" class="btn small" data-act="sub-cancel">Atšaukti</button>
+          </div>`
+        : s.answer ? `<div class="fi"><div class="fact"><span class="tag-lbl">atsakymas</span><span>${esc(s.answer)}</span></div></div>` : ''}
+        <div class="actions">
+          ${!editing ? `<button class="btn small primary" data-act="sub-answer">${s.answer ? 'Redaguoti atsakymą' : 'Atsakyti'}</button>` : ''}
+          <button class="btn small" data-act="sub-tohyp" title="Sukurti hipotezę iš šio klausimo">→ Hipotezė</button>
+          <button class="btn danger small" data-act="sub-del">Šalinti</button>
+        </div>
+      </div>`;
+  }
+
+  function viewTemos(q) {
+    const topics = q.topics || [];
+    return `
+    <section class="panel" data-note="etapas:temos" data-note-label="Langas: temos ir klausimai">
+      <h2>Temos ir klausimai</h2>
+      <p class="hint">Suskirstyk tyrimą į temas, o kiekvienoje temoje užsirašyk konkrečius klausimus, į kuriuos nori atsakyti. ✦ AI konsultacija veikia temos kontekste.</p>
+      <form class="add-form" id="add-topic">
+        <div class="field"><label for="f-topic">Nauja tema</label><input type="text" id="f-topic" required placeholder="pvz., Fiziologija, Praktinis taikymas, Rizikos…"></div>
+        <button class="btn primary" type="submit">Pridėti temą</button>
       </form>
-      ${subs.length ? subs.map(s => {
-        const editing = editSub === s.id;
+      ${topics.length ? topics.map(t => {
+        const open = (t.questions || []).filter(s => !s.answer).length;
         return `
-        <article class="item" data-sub="${s.id}" data-note="temos-klausimas:${q.id}:${s.id}" data-note-label="Temos klausimas: ${esc(s.text.slice(0, 40))}…">
-          <div class="row"><h3>${esc(s.text)}</h3>${s.answer ? '<span class="pill lvl-A">atsakyta</span>' : '<span class="pill tag">neatsakyta</span>'}</div>
-          ${editing ? `
-            <textarea id="sub-ta-${s.id}" class="ef-ta" placeholder="Trumpas atsakymas pagal surinktus įrodymus.">${esc(s.answer || '')}</textarea>
-            <div class="ef-row">
-              <button type="button" class="btn small primary" data-act="sub-save">Išsaugoti</button>
-              <button type="button" class="btn small" data-act="sub-cancel">Atšaukti</button>
-            </div>`
-          : s.answer ? `<div class="fi"><div class="fact"><span class="tag-lbl">atsakymas</span><span>${esc(s.answer)}</span></div></div>` : ''}
-          <div class="actions">
-            ${!editing ? `<button class="btn small primary" data-act="sub-answer">${s.answer ? 'Redaguoti atsakymą' : 'Atsakyti'}</button>` : ''}
-            <button class="btn small" data-act="sub-tohyp" title="Sukurti hipotezę iš šio klausimo">→ Hipotezė</button>
-            <button class="btn danger small" data-act="sub-del">Šalinti</button>
+        <article class="item topic" data-topic="${t.id}" data-note="tema:${q.id}:${t.id}" data-note-label="Tema: ${esc(t.name.slice(0, 40))}">
+          <div class="row">
+            <h3>${esc(t.name)}</h3>
+            <span class="pill ${open ? 'lvl-C' : 'lvl-A'}">${open ? 'neatsakyta ' + open : 'viskas atsakyta'}</span>
+            <span class="pill tag">klausimų ${t.questions.length}</span>
           </div>
+          ${t.questions.map(s => tqCard(q, t, s)).join('')}
+          <form class="tq-add" data-topic-form="${t.id}">
+            <input type="text" required placeholder="Naujas klausimas šioje temoje…" aria-label="Naujas klausimas temoje ${esc(t.name)}">
+            <button class="btn small primary" type="submit">+ Klausimas</button>
+          </form>
+          <div class="actions" style="margin-top:12px">
+            <button class="ai-btn" data-act="topic-ai" style="padding:4px 12px;font-size:12.5px">✦ AI konsultacija</button>
+            <button class="btn danger small" data-act="topic-del">Šalinti temą</button>
+          </div>
+          ${t.aiLog.length ? `<details class="hist"><summary>AI konsultacijos (${t.aiLog.length})</summary><ul>${t.aiLog.slice().reverse().map(e => `
+            <li style="display:block;margin-bottom:8px"><span class="when">${fmtDate(e.at)}</span><br>
+            <b>K:</b> ${esc(e.q)}<br><b>A:</b> ${esc(e.a.length > 400 ? e.a.slice(0, 400) + '…' : e.a)}</li>`).join('')}</ul></details>` : ''}
         </article>`;
-      }).join('') : '<div class="empty">Klausimų dar nėra — pridėk pirmą viršuje.</div>'}
+      }).join('') : '<div class="empty">Temų dar nėra — pridėk pirmą viršuje.</div>'}
     </section>`;
   }
 
@@ -1419,11 +1491,11 @@
     const input = document.getElementById('f-question');
     const text = input.value.trim();
     if (!text) return;
-    const nq = { id: uid(), createdAt: Date.now(), question: text, tags: homeTagFilter ? [homeTagFilter] : [], subs: [], hypotheses: [], items: [] };
+    const nq = { id: uid(), createdAt: Date.now(), question: text, tags: homeTagFilter ? [homeTagFilter] : [], topics: [], hypotheses: [], items: [] };
     state.questions.unshift(nq);
     input.value = '';
     save();
-    openQuestion(nq.id, 'klausimai'); // pirmas žingsnis — išsigryninti, ką nori atsakyti
+    openQuestion(nq.id, 'temos'); // pirmas žingsnis — išsigryninti temas ir klausimus
   });
 
   document.getElementById('reset-btn').addEventListener('click', () => {
@@ -1466,12 +1538,23 @@
       save(); render();
     });
 
-    const addSub = main.querySelector('#add-sub');
-    if (addSub) addSub.addEventListener('submit', e => {
+    const addTopic = main.querySelector('#add-topic');
+    if (addTopic) addTopic.addEventListener('submit', e => {
       e.preventDefault();
-      q.subs.push({ id: uid(), text: main.querySelector('#f-sub').value.trim(), answer: '' });
+      q.topics.push({ id: uid(), name: main.querySelector('#f-topic').value.trim(), questions: [], aiLog: [] });
       save(); render();
     });
+
+    main.querySelectorAll('form[data-topic-form]').forEach(f =>
+      f.addEventListener('submit', e => {
+        e.preventDefault();
+        const t = q.topics.find(x => x.id === f.dataset.topicForm);
+        const input = f.querySelector('input');
+        if (t && input.value.trim()) {
+          t.questions.push({ id: uid(), text: input.value.trim(), answer: '' });
+          save(); render();
+        }
+      }));
 
     // Vertinimo laukai — atnaujina juodraštį (evalDraft)
     const fFact = main.querySelector('#ev-fact');
@@ -1524,10 +1607,21 @@
         const id = itemEl ? itemEl.dataset.id : null;
         const it = id ? q.items.find(i => i.id === id) : null;
         const target = evalDraft ? q.items.find(i => i.id === evalDraft.itemId) : null;
+        const topicEl = el.closest('[data-topic]');
+        const topic = topicEl ? (q.topics || []).find(t => t.id === topicEl.dataset.topic) : null;
         const subEl = el.closest('[data-sub]');
-        const sub = subEl ? (q.subs || []).find(s => s.id === subEl.dataset.sub) : null;
+        let sub = null, subTopic = null;
+        if (subEl) for (const t of (q.topics || [])) {
+          const f = t.questions.find(s => s.id === subEl.dataset.sub);
+          if (f) { sub = f; subTopic = t; break; }
+        }
 
-        if (act === 'sub-answer' && sub) {
+        if (act === 'topic-ai' && topic) { openAiConsult(q, topic); return; }
+        else if (act === 'topic-del' && topic) {
+          if (!confirm(`Ištrinti temą „${topic.name}" su visais jos klausimais?`)) return;
+          q.topics = q.topics.filter(t => t.id !== topic.id);
+        }
+        else if (act === 'sub-answer' && sub) {
           editSub = sub.id;
           setTimeout(() => { const t = document.getElementById('sub-ta-' + sub.id); if (t) { t.focus(); t.selectionStart = t.value.length; } }, 0);
         }
@@ -1541,9 +1635,9 @@
           q.hypotheses.push(newHyp({ text: sub.text }));
           activeStage = 'sinteze';
         }
-        else if (act === 'sub-del' && sub) {
+        else if (act === 'sub-del' && sub && subTopic) {
           if (!confirm('Ištrinti šį klausimą?')) return;
-          q.subs = q.subs.filter(s => s.id !== sub.id);
+          subTopic.questions = subTopic.questions.filter(s => s.id !== sub.id);
           if (editSub === sub.id) editSub = null;
         }
         else if (act === 'to-eval') { activeStage = 'vertinimas'; aiSuggestion = null; evalDraft = newEvalDraft(it); }
@@ -1723,6 +1817,81 @@
     d.hidden = !d.hidden;
     renderFb();
   });
+
+  /* ───────── ✦ AI konsultacija temos kontekste ─────────
+     Prototipe: sudaro promptą su kontekstu ir taisyklėmis → kopijuoji į bet kurį AI,
+     atsakymą įklijuoji atgal ir jis išsaugomas temos žurnale.
+     Appse (lifeos.lol): tas pats kontekstas keliaus tiesiai į /api/ai (Gemini). */
+  function buildAiPrompt(q, topic, userText) {
+    const openQs = topic.questions.filter(s => !s.answer).map(s => '- ' + s.text);
+    const facts = q.items.filter(i => i.stage === 'kept' && i.fact)
+      .map(i => `- [${i.level}] ${i.fact}`);
+    return [
+      'KONTEKSTAS',
+      'Tyrimo klausimas: ' + q.question,
+      'Tema: ' + topic.name,
+      openQs.length ? 'Neatsakyti temos klausimai:\n' + openQs.join('\n') : '',
+      facts.length ? 'Jau surinkti faktai (su šaltinio lygiu):\n' + facts.join('\n') : '',
+      '',
+      'TAISYKLĖS (privalomos)',
+      '- Remkis tik moksliniu konsensusu; jokios retorikos.',
+      '- Kiekvienam teiginiui nurodyk konsensuso lygį: visuotinis / vyraujantis / ginčijamas / marginalus.',
+      '- Nurodyk šaltinius su tikromis nuorodomis; jei šaltinio nerandi — pasakyk atvirai, NIEKO neišgalvok.',
+      '- Atskirk faktą nuo interpretacijos.',
+      '- Pridėk bent vieną gyvenimišką pavyzdį.',
+      '',
+      'MANO KLAUSIMAS',
+      userText
+    ].filter(Boolean).join('\n');
+  }
+
+  function openAiConsult(q, topic) {
+    const back = document.createElement('div');
+    back.className = 'modal-back';
+    const openQs = topic.questions.filter(s => !s.answer);
+    back.innerHTML = `
+      <div class="modal ai-modal" role="dialog" aria-modal="true" aria-label="AI konsultacija">
+        <h2>✦ AI konsultacija · ${esc(topic.name)}</h2>
+        <p class="hint" style="margin:4px 0 0">Prototipe: nukopijuok klausimą su kontekstu, įklijuok į AI (Claude, ChatGPT, Gemini…), o atsakymą atnešk atgal. Appse tai vyks tiesiogiai.</p>
+        <div class="lbl">Ko nori paklausti?</div>
+        <textarea id="ai-q" placeholder="pvz., ${esc(openQs[0] ? openQs[0].text : 'Ką mokslas sako apie šią temą?')}"></textarea>
+        <div class="lbl">Kas bus pridėta prie klausimo (kontekstas + taisyklės)</div>
+        <div class="ctx" id="ai-ctx"></div>
+        <div class="ef-row">
+          <button type="button" class="btn primary" id="ai-copy">Kopijuoti klausimą su kontekstu</button>
+        </div>
+        <div class="lbl">AI atsakymas — įklijuok čia</div>
+        <textarea id="ai-a" placeholder="Įklijuok gautą atsakymą, kad jis liktų temos žurnale."></textarea>
+        <div class="close-row" style="gap:8px">
+          <button type="button" class="btn" data-close>Uždaryti</button>
+          <button type="button" class="btn primary" id="ai-save">Išsaugoti konsultaciją</button>
+        </div>
+      </div>`;
+    const qEl = back.querySelector('#ai-q');
+    const ctxEl = back.querySelector('#ai-ctx');
+    const refreshCtx = () => { ctxEl.textContent = buildAiPrompt(q, topic, qEl.value.trim() || '(įrašyk klausimą viršuje)'); };
+    qEl.addEventListener('input', refreshCtx);
+    refreshCtx();
+    back.querySelector('#ai-copy').addEventListener('click', () => {
+      navigator.clipboard.writeText(buildAiPrompt(q, topic, qEl.value.trim())).then(() => {
+        const b = back.querySelector('#ai-copy');
+        b.textContent = 'Nukopijuota ✓';
+        setTimeout(() => { b.textContent = 'Kopijuoti klausimą su kontekstu'; }, 1500);
+      });
+    });
+    back.querySelector('#ai-save').addEventListener('click', () => {
+      const a = back.querySelector('#ai-a').value.trim();
+      const question = qEl.value.trim();
+      if (!question && !a) { back.remove(); return; }
+      topic.aiLog.push({ q: question || '(be klausimo)', a: a || '(atsakymas neįklijuotas)', at: Date.now() });
+      save(); back.remove(); render();
+    });
+    const close = () => back.remove();
+    back.addEventListener('click', e => { if (e.target === back || e.target.hasAttribute('data-close')) close(); });
+    document.addEventListener('keydown', function esc2(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc2); } });
+    document.body.appendChild(back);
+    qEl.focus();
+  }
 
   /* ───────── Taisyklių modalas (iš learning modelio) ───────── */
   document.getElementById('rules-btn').addEventListener('click', () => {
