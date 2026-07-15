@@ -727,6 +727,14 @@
             stances: { h1: 'uz' }, kinds: {}
           }),
           newItem({
+            id: 'i8', title: 'Seneka, „Laiškai Lucilijui" (LXXXIII) — apie kasdienes maudynes šaltame Eurīpe, su komentarais',
+            url: 'https://example.com/seneka',
+            fact: 'Seneka aprašo savo kasdienį šalto vandens ritualą ir jam priskiriamą užsigrūdinimą.',
+            interp: 'Istorinis liudijimas, kad praktika sena — bet tai pirminis tekstas, ne įrodymas apie poveikį.',
+            stage: 'kept', level: 'D', tags: ['istorija'],
+            stances: { h1: 'neutralu' }, kinds: {}
+          }),
+          newItem({
             id: 'i3', title: 'Podkastas: neurologo epizodas apie šalčio poveikį dopaminui',
             url: '',
             note: 'Teigiama, kad šaltis ilgam pakelia dopaminą. Remiasi nedideliu 2000 m. tyrimu (n=10). Nuorodos neturiu.',
@@ -1835,16 +1843,22 @@
      Appse (lifeos.lol): tas pats kontekstas keliaus tiesiai į /api/ai (Gemini). */
   function buildAiPrompt(q, topic, userText) {
     const openQs = topic.questions.filter(s => !s.answer).map(s => '- ' + s.text);
-    const facts = q.items.filter(i => i.stage === 'kept' && i.fact)
+    const kept = q.items.filter(i => i.stage === 'kept');
+    // Faktai — tik A–C hierarchijos šaltiniai (Sisteminimo bazė).
+    const facts = kept.filter(i => ['A', 'B', 'C'].includes(i.level) && i.fact)
       .map(i => `- [${i.level}] ${i.fact}`);
+    const weak = kept.filter(i => i.level === 'D' || i.level === 'avoid')
+      .map(i => `- [${i.level === 'avoid' ? 'Ø' : 'D'}] ${i.title}`);
     return [
       'KONTEKSTAS',
       'Tyrimo klausimas: ' + q.question,
       'Tema: ' + topic.name,
       openQs.length ? 'Neatsakyti temos klausimai:\n' + openQs.join('\n') : '',
-      facts.length ? 'Jau surinkti faktai (su šaltinio lygiu):\n' + facts.join('\n') : '',
+      facts.length ? 'Surinkti FAKTAI (A–C šaltiniai):\n' + facts.join('\n') : '',
+      weak.length ? 'Silpna medžiaga — NE faktai (D pirminiai tekstai su komentarais, tinklaraščiai, neaiški kilmė) — tik paminėjimui:\n' + weak.join('\n') : '',
       '',
       'TAISYKLĖS (privalomos)',
+      '- Faktais laikyk TIK A–C hierarchijos šaltinius (žurnalai, monografijos, enciklopedijos). D lygio pirminius tekstus su komentarais ir tinklaraščius/neaiškią kilmę gali tik paminėti — aiškiai pažymėdamas, kad tai ne faktai.',
       '- Remkis tik moksliniu konsensusu; jokios retorikos.',
       '- Kiekvienam teiginiui nurodyk konsensuso lygį: visuotinis / vyraujantis / ginčijamas / marginalus.',
       '- Nurodyk šaltinius su tikromis nuorodomis; jei šaltinio nerandi — pasakyk atvirai, NIEKO neišgalvok.',
@@ -1887,7 +1901,7 @@
 
     const out = [];
     if (!scored.length && !hyps.length) {
-      out.push('Tavo bazėje nėra įvertintų šaltinių, susijusių su šiuo klausimu.');
+      out.push('Sisteminimo bazėje nėra įvertintų šaltinių, susijusių su šiuo klausimu.');
       out.push('');
       out.push('Pagal taisykles negaliu atsakyti neišgalvodamas šaltinių, todėl siūlau:');
       out.push('• pridėk šaltinių apie tai į „Rinkimo" etapą ir įvertink juos;');
@@ -1895,14 +1909,29 @@
       return out.join('\n');
     }
 
+    // Faktais laikomi tik A–C hierarchijos šaltiniai; D ir vengtini tik paminimi.
+    const factItems = scored.filter(x => ['A', 'B', 'C'].includes(x.i.level));
+    const weakItems = scored.filter(x => x.i.level === 'D' || x.i.level === 'avoid');
+
     if (scored.length) {
-      out.push(`Pagal tavo bazę (${scored.length} susiję šaltiniai iš ${kept.length} įvertintų)${byTopic ? ' — tiesioginių atitikmenų klausimui neradau, rodau temos kontekstą:' : ':'}`);
+      out.push(`Pagal Sisteminimo bazę (${scored.length} susiję šaltiniai iš ${kept.length} įvertintų)${byTopic ? ' — tiesioginių atitikmenų klausimui neradau, rodau temos kontekstą:' : ':'}`);
+    }
+    if (factItems.length) {
       out.push('');
-      scored.forEach(({ i }) => {
-        out.push(`[${i.level === 'avoid' ? 'Ø vengtinas' : i.level}] FAKTAS: ${i.fact || i.title}`);
+      out.push('FAKTAI (A–C šaltiniai):');
+      factItems.forEach(({ i }) => {
+        out.push(`[${i.level}] ${i.fact || i.title}`);
         if (i.interp) out.push(`    interpretacija: ${i.interp}`);
         if (i.unverified) out.push('    ⚠ šaltinis pažymėtas „nepatikrinta"');
       });
+    }
+    if (weakItems.length) {
+      out.push('');
+      out.push('PAMINĖTINA, bet NE faktai (pirminiai tekstai su komentarais, tinklaraščiai, neaiški kilmė):');
+      weakItems.forEach(({ i }) => {
+        out.push(`[${i.level === 'avoid' ? 'Ø' : 'D'}] ${i.title}${i.fact ? ' — ' + i.fact : ''}`);
+      });
+      out.push('    Šia medžiaga remtis negalima — nebent kaip hipotezių ar konteksto šaltiniu.');
     }
     if (hyps.length) {
       out.push('');
@@ -1913,12 +1942,11 @@
         out.push(`• „${h.text}" — ${cons}; bazės pasitikėjimas ${conf === null ? 'nėra duomenų' : conf + ' %'}${h.conclusion ? `; išvada: ${h.conclusion}` : ''}`);
       });
     }
-    const hiCount = scored.filter(x => x.i.level === 'A' || x.i.level === 'B').length;
     out.push('');
     out.push('Ko trūksta:');
-    if (!hiCount) out.push('• nėra A–B lygio šaltinių šiam klausimui — išvados kol kas silpnos;');
-    if (scored.some(x => x.i.level === 'avoid')) out.push('• dalis susijusios medžiagos — vengtino lygio (nesveria);');
-    out.push('• atsakau tik iš tavo surinktos bazės — naujų šaltinių neieškau ir neišgalvoju (taisyklė „tyrimas pirma").');
+    if (!factItems.length) out.push('• šiam klausimui nėra A–C lygio šaltinių — atsakyti faktais negaliu, tik paminėti silpną medžiagą;');
+    else if (!factItems.some(x => x.i.level === 'A' || x.i.level === 'B')) out.push('• yra tik C lygio (enciklopedijų) šaltinių — trūksta A–B (žurnalų / monografijų) patvirtinimo;');
+    out.push('• atsakau tik iš Sisteminimo bazės — naujų šaltinių neieškau ir neišgalvoju (taisyklė „tyrimas pirma").');
     return out.join('\n');
   }
 
@@ -1929,7 +1957,7 @@
     back.innerHTML = `
       <div class="modal ai-modal" role="dialog" aria-modal="true" aria-label="AI konsultacija">
         <h2>✦ AI konsultacija · ${esc(topic.name)}</h2>
-        <p class="hint" style="margin:4px 0 0">Vidinis asistentas atsako iš tavo įvertintos bazės pagal taisykles — nieko neišgalvoja. Appse jį pakeis tikras DI su ta pačia logika ir web paieška.</p>
+        <p class="hint" style="margin:4px 0 0">Vidinis asistentas atsako iš Sisteminimo bazės: <b>faktai — tik A–C šaltiniai</b>; D (pirminiai tekstai su komentarais) ir vengtini (tinklaraščiai, neaiški kilmė) tik paminimi. Nieko neišgalvoja.</p>
         <div class="lbl">Ko nori paklausti?</div>
         <textarea id="ai-q" placeholder="pvz., ${esc(openQs[0] ? openQs[0].text : 'Ką mokslas sako apie šią temą?')}"></textarea>
         <div class="lbl">Kas pridedama prie klausimo (kontekstas + taisyklės)</div>
