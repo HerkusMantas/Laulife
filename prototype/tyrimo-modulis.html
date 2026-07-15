@@ -387,6 +387,17 @@
     padding: 8px 10px; color: var(--ink);
   }
   .ai-modal .lbl { font-size: 12px; font-weight: 700; color: var(--muted); margin: 12px 0 4px; }
+  .ai-answer {
+    border: 1px solid var(--chart); border-radius: 10px; background: var(--good-soft);
+    padding: 12px 14px; margin-top: 10px; font-size: 13.5px; white-space: pre-wrap;
+    max-height: 320px; overflow-y: auto;
+  }
+  .ai-answer .thinking { color: var(--muted); font-style: italic; }
+  .ai-modal details.ext { margin-top: 14px; }
+  .ai-modal details.ext summary {
+    cursor: pointer; font-family: var(--mono); font-size: 11px;
+    letter-spacing: .05em; text-transform: uppercase; color: var(--muted);
+  }
 
   /* ✦ DI pasiūlymo panelė */
   .ai-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
@@ -1845,6 +1856,72 @@
     ].filter(Boolean).join('\n');
   }
 
+  /* Vidinis AI: atsako TIK iš tavo įvertintos bazės, pagal learning taisykles.
+     Nieko neišgalvoja — ko bazėje nėra, apie tai atvirai pasako.
+     Appse šią funkciją pakeis Gemini su tuo pačiu kontekstu ir taisyklėmis. */
+  function internalAiAnswer(q, topic, userText) {
+    const tokenize = (s) => s.toLowerCase()
+      .replace(/[^a-ząčęėįšųūž0-9\s-]/g, ' ')
+      .split(/\s+/).filter(w => w.length > 3);
+    const qTokens = tokenize(userText);
+    const scoreBy = (tokens) => (txt) => {
+      const t = (txt || '').toLowerCase();
+      return tokens.reduce((n, w) => n + (t.includes(w) ? 1 : 0), 0);
+    };
+    const kept = q.items.filter(i => i.stage === 'kept');
+    const itemText = (i) => i.title + ' ' + (i.fact || '') + ' ' + (i.interp || '') + ' ' + (i.tags || []).join(' ');
+
+    // 1) ieškom pagal paties klausimo žodžius; 2) nieko neradę — pagal temos kontekstą
+    let scoreText = scoreBy(qTokens);
+    let byTopic = false;
+    let scored = kept.map(i => ({ i, score: scoreText(itemText(i)) })).filter(x => x.score > 0);
+    let hyps = q.hypotheses.map(h => ({ h, score: scoreText(h.text) })).filter(x => x.score > 0);
+    if (!scored.length && !hyps.length) {
+      scoreText = scoreBy(tokenize(topic.name));
+      byTopic = true;
+      scored = kept.map(i => ({ i, score: scoreText(itemText(i)) })).filter(x => x.score > 0);
+      hyps = q.hypotheses.map(h => ({ h, score: scoreText(h.text) })).filter(x => x.score > 0);
+    }
+    scored = scored.sort((a, b) => b.score - a.score).slice(0, 5);
+    hyps = hyps.sort((a, b) => b.score - a.score).slice(0, 3);
+
+    const out = [];
+    if (!scored.length && !hyps.length) {
+      out.push('Tavo bazėje nėra įvertintų šaltinių, susijusių su šiuo klausimu.');
+      out.push('');
+      out.push('Pagal taisykles negaliu atsakyti neišgalvodamas šaltinių, todėl siūlau:');
+      out.push('• pridėk šaltinių apie tai į „Rinkimo" etapą ir įvertink juos;');
+      out.push('• arba paklausk išorinio AI su kontekstu (žr. žemiau) ir atsineštus šaltinius sudėk į bazę.');
+      return out.join('\n');
+    }
+
+    if (scored.length) {
+      out.push(`Pagal tavo bazę (${scored.length} susiję šaltiniai iš ${kept.length} įvertintų)${byTopic ? ' — tiesioginių atitikmenų klausimui neradau, rodau temos kontekstą:' : ':'}`);
+      out.push('');
+      scored.forEach(({ i }) => {
+        out.push(`[${i.level === 'avoid' ? 'Ø vengtinas' : i.level}] FAKTAS: ${i.fact || i.title}`);
+        if (i.interp) out.push(`    interpretacija: ${i.interp}`);
+        if (i.unverified) out.push('    ⚠ šaltinis pažymėtas „nepatikrinta"');
+      });
+    }
+    if (hyps.length) {
+      out.push('');
+      out.push('Susijusios hipotezės:');
+      hyps.forEach(({ h }) => {
+        const conf = confidence(q, h.id);
+        const cons = h.consensus ? `${CONSENSUS[h.consensus].dots} ${CONSENSUS[h.consensus].label}` : 'konsensusas nepažymėtas';
+        out.push(`• „${h.text}" — ${cons}; bazės pasitikėjimas ${conf === null ? 'nėra duomenų' : conf + ' %'}${h.conclusion ? `; išvada: ${h.conclusion}` : ''}`);
+      });
+    }
+    const hiCount = scored.filter(x => x.i.level === 'A' || x.i.level === 'B').length;
+    out.push('');
+    out.push('Ko trūksta:');
+    if (!hiCount) out.push('• nėra A–B lygio šaltinių šiam klausimui — išvados kol kas silpnos;');
+    if (scored.some(x => x.i.level === 'avoid')) out.push('• dalis susijusios medžiagos — vengtino lygio (nesveria);');
+    out.push('• atsakau tik iš tavo surinktos bazės — naujų šaltinių neieškau ir neišgalvoju (taisyklė „tyrimas pirma").');
+    return out.join('\n');
+  }
+
   function openAiConsult(q, topic) {
     const back = document.createElement('div');
     back.className = 'modal-back';
@@ -1852,19 +1929,34 @@
     back.innerHTML = `
       <div class="modal ai-modal" role="dialog" aria-modal="true" aria-label="AI konsultacija">
         <h2>✦ AI konsultacija · ${esc(topic.name)}</h2>
-        <p class="hint" style="margin:4px 0 0">Prototipe: nukopijuok klausimą su kontekstu, įklijuok į AI (Claude, ChatGPT, Gemini…), o atsakymą atnešk atgal. Appse tai vyks tiesiogiai.</p>
+        <p class="hint" style="margin:4px 0 0">Vidinis asistentas atsako iš tavo įvertintos bazės pagal taisykles — nieko neišgalvoja. Appse jį pakeis tikras DI su ta pačia logika ir web paieška.</p>
         <div class="lbl">Ko nori paklausti?</div>
         <textarea id="ai-q" placeholder="pvz., ${esc(openQs[0] ? openQs[0].text : 'Ką mokslas sako apie šią temą?')}"></textarea>
-        <div class="lbl">Kas bus pridėta prie klausimo (kontekstas + taisyklės)</div>
+        <div class="lbl">Kas pridedama prie klausimo (kontekstas + taisyklės)</div>
         <div class="ctx" id="ai-ctx"></div>
         <div class="ef-row">
-          <button type="button" class="btn primary" id="ai-copy">Kopijuoti klausimą su kontekstu</button>
+          <button type="button" class="ai-btn" id="ai-ask">✦ Atsakyti pagal taisykles</button>
         </div>
-        <div class="lbl">AI atsakymas — įklijuok čia</div>
-        <textarea id="ai-a" placeholder="Įklijuok gautą atsakymą, kad jis liktų temos žurnale."></textarea>
-        <div class="close-row" style="gap:8px">
+        <div id="ai-answer-wrap" hidden>
+          <div class="lbl">Vidinio asistento atsakymas</div>
+          <div class="ai-answer" id="ai-answer"></div>
+          <div class="ef-row">
+            <button type="button" class="btn small primary" id="ai-log">Išsaugoti į temos žurnalą</button>
+          </div>
+        </div>
+        <details class="ext">
+          <summary>Išorinis AI (kopijuok → įklijuok atsakymą)</summary>
+          <div class="ef-row" style="margin-top:8px">
+            <button type="button" class="btn" id="ai-copy">Kopijuoti klausimą su kontekstu</button>
+          </div>
+          <div class="lbl">Išorinio AI atsakymas — įklijuok čia</div>
+          <textarea id="ai-a" placeholder="Įklijuok gautą atsakymą, kad jis liktų temos žurnale."></textarea>
+          <div class="ef-row">
+            <button type="button" class="btn small primary" id="ai-save-ext">Išsaugoti į temos žurnalą</button>
+          </div>
+        </details>
+        <div class="close-row">
           <button type="button" class="btn" data-close>Uždaryti</button>
-          <button type="button" class="btn primary" id="ai-save">Išsaugoti konsultaciją</button>
         </div>
       </div>`;
     const qEl = back.querySelector('#ai-q');
@@ -1872,6 +1964,26 @@
     const refreshCtx = () => { ctxEl.textContent = buildAiPrompt(q, topic, qEl.value.trim() || '(įrašyk klausimą viršuje)'); };
     qEl.addEventListener('input', refreshCtx);
     refreshCtx();
+
+    let lastAnswer = '';
+    back.querySelector('#ai-ask').addEventListener('click', () => {
+      const question = qEl.value.trim();
+      if (!question) { qEl.focus(); return; }
+      const wrap = back.querySelector('#ai-answer-wrap');
+      const box = back.querySelector('#ai-answer');
+      wrap.hidden = false;
+      box.innerHTML = '<span class="thinking">✦ peržiūriu bazę…</span>';
+      setTimeout(() => {
+        lastAnswer = internalAiAnswer(q, topic, question);
+        box.textContent = lastAnswer;
+      }, 450);
+    });
+    back.querySelector('#ai-log').addEventListener('click', () => {
+      if (!lastAnswer) return;
+      topic.aiLog.push({ q: qEl.value.trim(), a: lastAnswer, at: Date.now(), src: 'vidinis' });
+      save(); back.remove(); render();
+    });
+
     back.querySelector('#ai-copy').addEventListener('click', () => {
       navigator.clipboard.writeText(buildAiPrompt(q, topic, qEl.value.trim())).then(() => {
         const b = back.querySelector('#ai-copy');
@@ -1879,11 +1991,10 @@
         setTimeout(() => { b.textContent = 'Kopijuoti klausimą su kontekstu'; }, 1500);
       });
     });
-    back.querySelector('#ai-save').addEventListener('click', () => {
+    back.querySelector('#ai-save-ext').addEventListener('click', () => {
       const a = back.querySelector('#ai-a').value.trim();
-      const question = qEl.value.trim();
-      if (!question && !a) { back.remove(); return; }
-      topic.aiLog.push({ q: question || '(be klausimo)', a: a || '(atsakymas neįklijuotas)', at: Date.now() });
+      if (!a) return;
+      topic.aiLog.push({ q: qEl.value.trim() || '(be klausimo)', a, at: Date.now(), src: 'išorinis' });
       save(); back.remove(); render();
     });
     const close = () => back.remove();
